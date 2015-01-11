@@ -1,0 +1,458 @@
+
+<ul class="download">
+<li><a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET#installation">Install JSNLog (recommended)</a></li>
+<li><a href="https://github.com/mperdeck/jsnlog" target="_blank">Source files and sample code</a></li>
+</ul>
+
+
+
+
+<p>
+Shows how to insert loggers in your JavaScript with  
+<a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET">JSNLog</a>, a JavaScript logging library that is well integrated with .Net.
+It lets you configure loggers in your web.config.
+And it lets you receive log messages from the client and store them on the server, without any coding.
+</p>
+
+
+
+
+<h2>Contents of this series</h2>
+
+
+
+
+<ul>
+<li><a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET#installation">Installation</a></li>
+<li><a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET#shortstory">Getting Started - short version</a></li>
+<li><a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET#longstory">Getting Started - detailed version</a></li>
+<li><strong>Inserting loggers in your JavaScript</strong></li>
+<li><a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#configuration">Configuring your loggers in web.config</a></li>
+</ul>
+
+
+
+
+<h2><a name="clientside"></a>Inserting loggers in your JavaScript</h2>
+
+
+
+
+<p>
+Use the following methods to insert logging in your JavaScript.
+</p>
+
+
+
+
+<ul>
+<li><a href="#js-getLogger">getLogger</a></li>
+<li><a href="#js-getRootLogger">getRootLogger</a></li>
+<li><a href="#js-trace">trace</a></li>
+<li><a href="#js-debug">debug</a></li>
+<li><a href="#js-info">info</a></li>
+<li><a href="#js-warn">warn</a></li>
+<li><a href="#js-error">error</a></li>
+<li><a href="#js-fatal">fatal</a></li>
+<li><a href="#js-time">time</a></li>
+<li><a href="#js-timeEnd">timeEnd</a></li>
+<li><a href="#js-assertEqual">assertEqual</a></li>
+</ul>
+
+
+
+
+<h3><a name="js-getLogger"></a>getLogger</h3>
+
+
+
+
+<p>
+Gets a reference to a logger. If the logger does not yet exist, it will be created.
+</p>
+
+
+
+
+<pre>jsnlog.getLogger(loggerName);
+</pre>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+<dt>loggerName</dt>
+<dd>
+Type: string
+<p>
+The name of the logger.
+</p></dd>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>
+Type: logger
+</p>
+<p>
+A reference to the logger with the given name.
+</p>
+
+
+
+
+<h4>Example</h4>
+<pre>var logger = jsnlog.getLogger(&quot;yForms.Validators.IsNumeric.exceptionHandler&quot;);
+</pre>
+
+
+
+
+<a name="recommendednaming"></a>
+<h4>Recommended naming</h4>
+<p>
+Although you can use any naming scheme for your loggers, it tends to make sense to use this structure:
+</p><blockquote>
+namespace.objecttype.methodname.location within method
+</blockquote>
+<p />
+
+<p>
+This makes it immediately clear where in your code the logger is located. For example: 
+</p>
+<pre>// Create namespace
+var yForms = yForms || {};
+
+// Create Validators object constructor within namespace yForms
+yForms.Validators = function() {};
+
+// Create IsNumeric method on the Validators object
+yForms.Validators.prototype.IsNumeric = function(inputValue) {
+    try {
+        ...
+    } catch(err) {
+        // Get the logger yForms.Validators.IsNumeric.exceptionHandler and log a fatal message 
+        <strong>jsnlog.getLogger(&quot;yForms.Validators.IsNumeric.exceptionHandler&quot;).fatal(err.message);</strong>
+    }
+}
+</pre>
+<p>
+Obviously, if you do not have namespaces or objects, you could have logger names without those elements.
+</p>
+
+
+
+
+<a name="inheritance"></a>
+<h4>Appender and level inheritance</h4>
+
+
+
+
+<p>
+So that you do not have to configure an appender and level for every single logger,
+a logger inherits the level and appenders from its parent. This uses the same scheme as 
+<a href="http://logging.apache.org/log4net/" target="_blank">Log4Net</a>.
+</p>
+<p>
+JSNLog works out the parent of a logger by taking away one level of its name. This means that:
+</p>
+<ul>
+<li>
+The parent of <em>yForms.Validators.IsNumeric.exceptionHandler</em> is <em>yForms.Validators.IsNumeric</em>
+</li>
+<li>
+The parent of <em>yForms.Validators.IsNumeric</em> is <em>yForms.Validators</em>
+</li>
+<li>
+The parent of <em>yForms.Validators</em> is <em>yForms</em>
+</li>
+</ul>
+<p>
+The parent of <em>yForms</em> is a special logger, called the root logger. However, apart from the fact that this root logger
+has no parent and no name, it 
+can still be <a href="#js-getRootLogger">used</a> and configured as a normal logger.
+</p>
+
+<h3><a name="js-getRootLogger"></a>getRootLogger</h3>
+
+<p>
+Returns a reference to the root logger.
+</p>
+
+<pre>jsnlog.getRootLogger();
+</pre>
+
+<h4>Parameters</h4>
+<p>None</p>
+
+
+
+
+<h4>Return Value</h4>
+<p>
+Type: logger
+</p>
+<p>
+A reference to the root logger.
+</p>
+
+<h4>Example</h4>
+<pre>var rootLogger = jsnlog.getRootLogger();
+</pre>
+
+
+
+
+<h4>Remarks</h4>
+<p>
+Normally, it makes sense to only use named loggers, because:
+</p><ul>
+<li>
+this allows you to configure each logger individually; and
+ </li>
+<li>
+helps
+you identify the exact location in your code where a log message was generated.
+</li>
+</ul>
+<p />
+
+
+
+
+
+<p>
+However, if you decide to use only one logger, you could use the root logger. 
+</p>
+
+<h3><a name="js-trace"></a>trace</h3>
+
+<p>
+Gets a logger to send a message with severity TRACE.
+</p>
+
+<pre>logger.trace(message);
+</pre>
+
+
+
+
+<h4>Parameters</h4>
+<dl>
+<dt>message</dt>
+<dd>
+Type: object
+<p>
+Message to be sent. This can be any object, so doesn't have to be a string.
+</p></dd>
+</dl>
+
+<h4>Return Value</h4>
+<p>
+None
+</p>
+
+
+<h4>Example</h4>
+<pre>var logger = jsnlog.getLogger(&quot;yForms.Validators.IsNumeric.exceptionHandler&quot;);
+logger.trace(&quot;Something interesting happened&quot;);
+</pre>
+<p>
+Or shorter:
+</p>
+<pre>jsnlog.getLogger(&quot;yForms.Validators.IsNumeric.interesting&quot;).trace(&quot;Something interesting happened&quot;);
+</pre>
+<p>
+You can also send an object. JSNLog will produce a message showing the values of its fields:
+</p>
+<pre>var myValidator = new Validator(); 
+jsnlog.getLogger(&quot;yForms.Validators.IsNumeric.interesting&quot;).trace(myValidator);
+</pre>
+
+<h3><a name="js-debug"></a>debug</h3>
+
+<p>
+Similar to method <em>trace</em>, but sends a message of severity DEBUG.
+</p>
+<pre>jsnlog.getLogger(&quot;yForms.Validators.IsNumeric.interesting&quot;).debug(&quot;Something interesting happened&quot;);
+</pre>
+
+<h3><a name="js-info"></a>info</h3>
+
+<p>
+Similar to method <em>trace</em>, but sends a message of severity INFO.
+</p>
+<pre>jsnlog.getLogger(&quot;yForms.Validators.IsNumeric.interesting&quot;).info(&quot;Something interesting happened&quot;);
+</pre>
+
+<h3><a name="js-warn"></a>warn</h3>
+
+<p>
+Similar to method <em>trace</em>, but sends a message of severity WARN.
+</p>
+<pre>jsnlog.getLogger(&quot;yForms.Validators.IsNumeric.interesting&quot;).warn(&quot;Something interesting happened&quot;);
+</pre>
+
+<h3><a name="js-error"></a>error</h3>
+
+<p>
+Similar to method <em>trace</em>, but sends a message of severity ERROR.
+</p>
+<pre>jsnlog.getLogger(&quot;yForms.Validators.IsNumeric.interesting&quot;).error(&quot;Something interesting happened&quot;);
+</pre>
+
+<h3><a name="js-fatal"></a>fatal</h3>
+
+<p>
+Similar to method <em>trace</em>, but sends a message of severity FATAL.
+</p>
+<pre>jsnlog.getLogger(&quot;yForms.Validators.IsNumeric.interesting&quot;).fatal(&quot;Something interesting happened&quot;);
+</pre>
+
+<h3><a name="js-time"></a>time</h3>
+
+<p>
+Starts a timer. 
+When the timer is ended with a call to 
+<a href="#js-timeEnd">timeEnd</a>
+ using the same timer name, 
+the amount of time that has elapsed in milliseconds since the timer was started is logged.
+</p>
+
+<pre>logger.time(timerName, messageLevel)
+</pre>
+
+<h4>Parameters</h4>
+<dl>
+<dt>timerName</dt>
+<dd>
+Type: string
+<p>
+Name assigned to the newly created timer.
+</p></dd>
+<dt>messageLevel (optional)</dt>
+<dd>
+    Type: level
+    <p>
+    One of:
+    </p><blockquote>
+jsnlog.Level.TRACE<br />
+jsnlog.Level.DEBUG<br />
+jsnlog.Level.INFO (default)<br />
+jsnlog.Level.WARN<br />
+jsnlog.Level.ERROR<br />
+jsnlog.Level.FATAL
+    </blockquote>
+    <p>
+    The message sent by timeEnd will have this level.
+    If you do not supply a level, jsnlog.Level.INFO is used.
+    </p>
+</dd>
+</dl>
+
+
+
+
+<h4>Return Value</h4>
+<p>
+None
+</p>
+
+<h4>Example</h4>
+
+<p>
+The following code uses a timer to measure how long a lengthy operation takes in milli seconds.
+After the operation has finished, it sends a message with severity DEBUG with the measured time.
+</p>
+<p>
+Keep in mind that in this case, the message will only be logged if the logger has level DEBUG or higher.
+</p>
+
+<pre>jsnlog.getLogger(&quot;yForms.Validators.IsNumeric.timer1&quot;).time(&quot;timer1&quot;, jsnlog.Level.DEBUG);
+
+... lengthy operation ...
+
+jsnlog.getLogger('yForms.Validators.IsNumeric.timer1').timeEnd('timer1');
+</pre>
+
+<h3><a name="js-timeEnd"></a>timeEnd</h3>
+
+<p>
+Ends a timer that was started by <a href="#js-time">time</a> and sends a message with the elapsed time.
+</p>
+
+<pre>logger.timeEnd(timerName)
+</pre>
+
+<h4>Parameters</h4>
+<dl>
+<dt>timerName</dt>
+<dd>
+Type: string
+<p>
+Name of the timer as assigned by 
+<a href="#js-time">time</a>.
+</p></dd>
+</dl>
+
+<h4>Return Value</h4>
+<p>None</p>
+
+<h4>Example</h4>
+<p>
+See the example provided for 
+<a href="#js-time">time</a>.
+</p>
+
+<h3><a name="js-assertEqual"></a>assertEqual</h3>
+
+<p>
+Compares two values using !=.
+If they are equal, this does nothing. Otherwise,
+it sends a message with severity ERROR.
+</p>
+
+<pre>logger.assertEqual(v1, v2)
+</pre>
+
+<h4>Parameters</h4>
+<dl>
+<dt>v1, v2</dt>
+<dd>
+Type: any
+<p>
+If these parameters are not equal, an ERROR log message is generated.
+</p></dd>
+</dl>
+
+<h4>Return Value</h4>
+<p>None</p>
+
+<h4>Example</h4>
+
+<pre>var expectedValue = ....;
+var actualValue = ....;
+
+jsnlog.getLogger('yForms.Validators.IsNumeric.AssertPositive').assertEqual(expectedValue, actualValue);
+</pre>
+
+<h2>Next part</h2>
+<p>
+In this part 2 about JSNLog, you saw in detail all JavaScript functions provided by JSNLog.
+The 
+<a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog">next part</a>,
+will show all elements and attributes you can use in your web.config to configure your JavaScript loggers.
+</p>
+
+
+
+
+<p>If you like this article, please vote for it. </p>
+
+
+
+

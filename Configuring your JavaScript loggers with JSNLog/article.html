@@ -1,0 +1,1244 @@
+﻿<ul class="download">
+    <li><a href="http://www.nuget.org/packages/JSNLog/">Install JSNLog with Nuget (recommended)</a></li>
+    <li><a href="https://github.com/mperdeck/jsnlog" target="_blank">Source files and sample code</a></li>
+</ul>
+
+<p>
+    Shows how to configure your JavaScript loggers with
+    <a href="http://www.jsnlog.com">JSNLog</a>, a JavaScript logging library that is well integrated with .Net.
+    It lets you configure loggers in your web.config.
+    And it lets you receive log messages from the client and store them on the server, without any coding.
+</p>
+
+<h2>Contents of this series</h2>
+
+<ul>
+    <li><a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET">Why and how of JavaScript logging</a></li>
+    <li><a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog">Inserting loggers in your JavaScript</a></li>
+    <li><strong>Configuring your loggers in web.config</strong></li>
+</ul>
+
+<h2><a name="configuration"></a>Configuring your loggers in web.config</h2>
+
+<ul>
+    <li><a href="#config-jsnlog">&lt;jsnlog&gt; Element</a></li>
+    <li><a href="#config-logger">&lt;logger&gt; Element</a></li>
+    <li><a href="#config-ajaxAppender">&lt;ajaxAppender&gt; Element</a></li>
+    <li><a href="#config-consoleAppender">&lt;consoleAppender&gt; Element</a></li>
+</ul>
+
+<p>
+    If you have an ASP.NET MVC or WebForms web site, you can configure your client side loggers
+    from your server side web.config.
+</p>
+<p>
+    Note that
+    after
+    installation</a>,
+    JSNLog doesn't need any additional configuration. All you need to do to start logging is
+    <a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog">add loggers to your JavaScript code</a><text>.</text>
+    You only need to update your web.config if you want to change the default configuration.
+</p>
+<p>
+    During <a href="http://www.nuget.org/packages/JSNLog/">installation</a>,
+    a
+    &lt;jsnlog&gt; Element
+    will have been added to your web.config. This is the container for the other elements.
+</p>
+
+
+
+
+
+
+
+<h2><a name="config-jsnlog"></a>&lt;jsnlog&gt; Element</h2>
+<p>
+    The root element for all JSNLog configuration elements.
+</p>
+
+
+
+    <h3>Definition</h3>
+
+<pre>&lt;configuration&gt; 
+    &lt;jsnlog
+        enabled="true|false"
+        maxMessages="number"
+        serverSideLogger="string"
+        serverSideLevel="number|TRACE|DEBUG|INFO|WARN|ERROR|FATAL" 
+        serverSideMessageFormat="string"
+        productionLibraryPath="string" &gt;
+    &lt;/jsnlog&gt;
+&lt;/configuration&gt; 
+</pre>
+
+
+
+
+
+
+
+
+
+
+    <h3>Remarks</h3>
+
+    <p>
+        The &lt;jsnlog&gt; element can have the following attributes:
+    </p>
+
+    <table class="border">
+
+
+
+        <thead>
+            <tr>
+                <th>Attribute</th>
+                <th style="width: 100px">Default</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+
+
+        <tbody>
+            <tr>
+                <td valign="top">enabled<br /><small>optional</small></td>
+                <td valign="top">true</td>
+                <td valign="top">If false, all loggers are disabled.</td>
+            </tr>
+
+            <tr>
+                <td valign="top">maxMessages<br /><small>optional</small></td>
+                <td valign="top">no maximum</td>
+                <td valign="top">Limits total number of messages sent to the server. See remarks below.</td>
+            </tr>
+
+            <tr>
+                <td valign="top">serverSideLogger<br /><small>optional</small></td>
+                <td valign="top">(empty)</td>
+                <td valign="top">
+                    By default, all log messages from your JavaScript code are passed on to your server side logging package
+                    with the name of the JavaScript logger.
+                    <p />
+                    However, if you want to use a specific logger name for all your JavaScript log messages, you can specify that with this attribute.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">serverSideLevel<br /><small>optional</small></td>
+                <td valign="top">(empty)</td>
+                <td valign="top">
+                    By default, all log messages from your JavaScript code are passed on to your server side logging package with the same level as the original JavaScript log message.
+                    <p />
+                    However, if you want to use a specific level, you can specify that with this attribute.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">serverSideMessageFormat<br /><small>optional</small></td>
+                <td valign="top">%message</td>
+                <td valign="top">See remarks.</td>
+            </tr>
+
+            <tr>
+                <td valign="top">productionLibraryPath<br /><small>optional</small></td>
+                <td valign="top">(empty)</td>
+                <td valign="top">
+                    Path to the jsnlog.js file. JSNLog generates a &lt;script&gt; tag with this url.
+                    <p />
+                    If you do not specify this, JSNLog will not generate the &lt;script&gt; tag.
+                    This makes sense if you for example combine jsnlog.js with your other
+                    JavaScript files and you use your own &lt;script&gt; tag to load this combined file.
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+
+
+
+
+    <h4>maxMessages and buffering</h4>
+    <p>
+        You use maxMessages to limit the number of messages sent to the
+        server, per page load. When the page is loaded by the client,
+        a counter is set to maxMessages.
+
+        Each time messages are sent to the server, that counter is decremented
+        by the number of messages sent. When the counter gets to zero or below, no more messages will be sent.
+    </p>
+
+    <p>
+        However, this is affected by
+        <a href="#config-ajaxAppender">batching and buffering</a>.
+    </p>
+    <p>
+        Take a situation where maxMessages is set to 5 and 2 messages have already been sent - so the message counter
+        is now 3.
+        If 8 messages had been stored in a buffer and those messages are now sent, they will be all sent. That means the server will receive
+        a total of 2 + 8 = 10 messages. After this, no more messages will be sent, because the number of messages sent (10) exceeds maxMessages (5).
+    </p>
+    <p>
+        This means that maxMessages is not a precise limit on the number of messages sent to the server. On the other hand,
+        buffered messages are sent together in a single request to the server, minimizing bandwidth.
+        And buffered messages are often useful in solving exceptions, so there is value in receiving them.
+    </p>
+
+
+
+    <h4>serverSideMessageFormat</h4>
+
+    <p>
+        Your server not only receives the the original message passed into the JavaScript logger,
+        but also the logger, the level, a timestamp, etc.
+    </p>
+    <p>
+        You can choose to have this additional information logged on the server along with
+        the original message, by setting <i>serverSideMessageFormat</i> to a format string with
+        one or more place holders:
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Place holder</th>
+                <th>Is replaced by</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr valign="top">
+                <td>%message</td>
+                <td>Original message given to the JavaScript logger</td>
+            </tr>
+            <tr valign="top">
+                <td>%utcDate</td>
+                <td>Date and time in UTC when the message was generated, according to the client's clock</td>
+            </tr>
+            <tr valign="top">
+                <td>%utcDateServer</td>
+                <td>Date and time in UTC when the message was received by the server, according to the server's clock</td>
+            </tr>
+            <tr valign="top">
+                <td>%date</td>
+                <td>
+                    Date and time when the message was generated, according to the client's clock.
+                    This equals %utcDate converted to the server's local time.
+                </td>
+            </tr>
+            <tr valign="top">
+                <td>%dateServer</td>
+                <td>Date and time in the server's local time when the message was received by the server, according to the server's clock</td>
+            </tr>
+            <tr valign="top">
+                <td>%level</td>
+                <td>Level of the message, as provided by the JavaScript code</td>
+            </tr>
+            <tr valign="top">
+                <td>%userAgent</td>
+                <td>Identifies the make of the browser</td>
+            </tr>
+            <tr valign="top">
+                <td>%userHostAddress</td>
+                <td>IP address of the sender</td>
+            </tr>
+            <tr valign="top">
+                <td>%url</td>
+                <td>Url of the page on which the message was generated</td>
+            </tr>
+            <tr valign="top">
+                <td>%logger</td>
+                <td>JavaScript logger that generated the message</td>
+            </tr>
+            <tr valign="top">
+                <td>%requestId</td>
+                <td>
+                    Identifies the request for which the log message was created.
+                    This request id will be automatically generated for you.
+                </td>
+            </tr>
+            <tr valign="top">
+                <td>%newline</td>
+                <td>Newline character</td>
+            </tr>
+        </tbody>
+    </table>
+
+
+
+
+
+    <h3>Examples</h3>
+
+    <p>
+        This shows the date and time that the log message was created on the client as well as the user agent
+        in each log message.
+    </p>
+<pre>&lt;jsnlog 
+    serverSideMessageFormat="Sent: %date, Brower: %userAgent - %message" &gt;</pre>
+
+    <p>
+        This processes all client side log messages via the server side logger "jslogger".
+    </p>
+    <pre>&lt;jsnlog serverSideLogger="jslogger"&gt;</pre>
+
+    <p>
+        This disables all client side loggers.
+    </p>
+    <pre>&lt;jsnlog enabled="false"&gt;</pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h2><a name="config-logger"></a>&lt;logger&gt; Element</h2>
+<p>
+    Configures a logger.
+</p>
+
+
+
+    <h3>Definition</h3>
+
+<pre>&lt;configuration&gt; 
+    &lt;jsnlog&gt;
+        &lt;logger 
+            name="string" 
+            level="number|TRACE|DEBUG|INFO|WARN|ERROR|FATAL|OFF|ALL"
+            userAgentRegex="regular expression"
+            ipRegex="regular expression"
+            disallow="regular expression" 
+            appenders="Appender Name(s)" &gt;
+            &lt;onceOnly regex="regular expression" /&gt;
+        &lt;/logger&gt; 
+    &lt;/jsnlog&gt;
+&lt;/configuration&gt; 
+</pre>
+
+
+
+
+
+
+
+
+
+
+
+
+    <h3>Remarks</h3>
+
+    <p>
+        The &lt;logger&gt; element can have the following attributes:
+    </p>
+
+
+
+
+    <table class="border">
+
+
+
+        <thead>
+            <tr>
+                <th>Attribute</th>
+                <th style="width: 100px">Default</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+
+
+        <tbody>
+            <tr>
+                <td valign="top">name<br /><small>optional</small></td>
+                <td valign="top">(empty)</td>
+                <td valign="top">
+                    Name of the logger you want to configure. To configure the root logger,
+                    simply omit the <i>name</i> attribute.<p />
+                    In your server side logs, the root logger is called
+                    <i>ClientRoot</i>.
+                </td>
+            </tr>
+
+
+
+            <tr>
+                <td valign="top">level<br /><small>optional</small></td>
+                <td valign="top">(inherited from parent logger)</td>
+                <td valign="top">Only log messages with a severity equal or higher than this can be sent to the server.</td>
+            </tr>
+
+            <tr>
+                <td valign="top">userAgentRegex<br /><small>optional</small></td>
+                <td valign="top">(inherited from parent logger)</td>
+                <td valign="top">
+                    If not empty, log messages only get processed if this regular expression matches the
+                    <a href="http://www.useragentstring.com/" target="_blank">user agent string</a>
+                    of the browser.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">ipRegex<br /><small>optional</small></td>
+                <td valign="top">(inherited from parent logger)</td>
+                <td valign="top">
+                    If not empty, log messages only get processed if this regular expression matches the IP address
+                    of the browser.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">disallow<br /><small>optional</small></td>
+                <td valign="top">(inherited from parent logger)</td>
+                <td valign="top">
+                    If not empty, log messages are suppressed if they match this regular expression. If an object is being logged,
+                    it is converted to a JSON string, which is then matched.
+                </td>
+            </tr>
+
+
+            <tr>
+                <td valign="top">appenders<br /><small>optional</small></td>
+                <td valign="top">(inherited from parent logger)</td>
+                <td valign="top">One or more appenders for the logger to send its log messages to. See the examples.</td>
+            </tr>
+
+            <tr>
+                <td valign="top">onceOnly<br /><small>optional</small></td>
+                <td valign="top">(inherited from parent logger)</td>
+                <td valign="top">
+                    One or more regular expressions. When a message matches a regular expression, then
+                    any subsequent messages matching that same regular expression will be suppressed. See the remarks and examples.
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+
+
+
+
+    <a name="inheritance"></a>
+    <h4>Logger names and option inheritance</h4>
+    <p>
+        Loggers not only get their options through the &lt;logger&gt; element,
+        but also through inheritance. This is based on the name of each logger.
+    </p>
+    <p>
+        Assume that you have a method &quot;method1&quot; in a namespace &quot;namespace1&quot;. Then it would
+        make sense to use a naming scheme for you loggers like this: &quot;namespace1.method1.logger1&quot;,
+        &quot;namespace1.method1.logger2&quot;, etc. This way, there are no name clashes and it makes keeping
+        track of your loggers easy.
+    </p>
+    <p>
+        Just as a namespace may contain methods, and a method may contain loggers, so you can think of these logger names
+        as making up a hierarchy:
+    </p>
+    <ul>
+        <li>
+            The parent of &quot;namespace1.method1.logger1&quot; is &quot;namespace1.method1&quot;;
+        </li>
+        <li>
+            The parent of &quot;namespace1.method1&quot; is &quot;namespace1&quot;;
+        </li>
+        <li>
+            The parent of &quot;namespace1&quot; is the root logger (the logger without a name).
+        </li>
+    </ul>
+    <p>
+        You're not limited to just 3 levels, you can have as many as want.
+    </p>
+    <p>
+        If you don't set an option using the &lt;logger&gt; element<text>,</text>
+        the logger inherits that option from its parent. If you do not use &lt;logger&gt; element
+        at all, every logger will have the same options as the root logger.
+    </p>
+
+
+    <h4>Root logger and default appender</h4>
+    <p>
+        When the library loads, it creates the root logger. It also creates a default appender for use by the root logger.
+    </p>
+    <p>
+        Because every logger inherits from the root logger (unless you override this with
+        the &lt;logger&gt; element),
+        you can start logging right away without having to create an appender.
+    </p>
+    <p>
+        The root logger is created with these options:
+    </p>
+    <table class="border">
+        <thead>
+            <tr>
+                <th>Option</th>
+                <th>Default Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td valign="top">level</td>
+                <td valign="top">DEBUG</td>
+            </tr>
+
+            <tr>
+                <td valign="top">userAgentRegex</td>
+                <td valign="top">(empty)</td>
+            </tr>
+
+            <tr>
+                <td valign="top">ipRegex</td>
+                <td valign="top">(empty)</td>
+            </tr>
+
+            <tr>
+                <td valign="top">disallow</td>
+                <td valign="top">(empty)</td>
+            </tr>
+
+            <tr>
+                <td valign="top">appenders</td>
+                <td valign="top">(default appender)</td>
+            </tr>
+
+        </tbody>
+    </table>
+
+    <p>
+        Note that because the default <i>level</i> for root logger is DEBUG,
+        by default only log messages with severity DEBUG or higher get processed.
+    </p>
+    <p>
+        You can change the options used with the root logger in the same way
+        as any other logger, using the &lt;logger&gt; element. See the examples below.
+    </p>
+
+    <p>
+        The default appender is created with these options
+        (<a href="#config-ajaxAppender">description of options</a>):
+    </p>
+    <table class="border">
+        <thead>
+            <tr>
+                <th>Option</th>
+                <th>Default Value</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td valign="top">level</td>
+                <td valign="top">TRACE</td>
+            </tr>
+
+            <tr>
+                <td valign="top">userAgentRegex</td>
+                <td valign="top">(empty)</td>
+            </tr>
+
+            <tr>
+                <td valign="top">ipRegex</td>
+                <td valign="top">(empty)</td>
+            </tr>
+
+            <tr>
+                <td valign="top">disallow</td>
+                <td valign="top">(empty)</td>
+            </tr>
+
+            <tr>
+                <td valign="top">storeInBufferLevel</td>
+                <td valign="top">ALL</td>
+            </tr>
+
+            <tr>
+                <td valign="top">sendWithBufferLevel</td>
+                <td valign="top">OFF</td>
+            </tr>
+
+            <tr>
+                <td valign="top">bufferSize</td>
+                <td valign="top">0</td>
+            </tr>
+
+            <tr>
+                <td valign="top">batchSize</td>
+                <td valign="top">1</td>
+            </tr>
+
+            <tr>
+                <td valign="top">url</td>
+                <td valign="top">jsnlog.logger</td>
+            </tr>
+
+        </tbody>
+    </table>
+
+
+
+    <h4>Suppressing duplicate messages with onceOnly</h4>
+    <p>
+        You may have loggers inside code that gets called multiple times.
+        As a result, you may get a series of messages that are essentially the same.
+        Using <i>onceOnly</i>, you can suppress the duplicate messages, so only the first
+        message is sent to the server.
+    </p>
+    <p>
+        This works by setting one or more regular expressions. When a log message
+        matches one of the regular expressions, the logger remembers that there has been a message that matched that regular expression.
+        Then when another message arrives that matches that same regular expression, it is suppressed.
+    </p>
+
+    <p>
+        For example, if you receive these messages:
+    </p>
+<pre>
+    Parameter x too high - x = 5
+    Parameter x too high - x = 6
+    Parameter x too high - x = 7
+    ...
+    Parameter x too high - x = 49
+    Parameter x too high - x = 50
+</pre>
+    <p>
+        Then you can use the regular expression:
+    </p>
+<pre>
+    Parameter x too high - x = 
+</pre>
+    <p>
+        To only receive the very first message:
+    </p>
+<pre>
+    Parameter x too high - x = 5
+</pre>
+    <p>
+        See the examples for how to set the regular expression.
+    </p>
+    <p>
+        You can set multiple regular expressions. These work independently. So if a message matches
+        the first regular expression, then if a second message matches the second regular expression but not the first,
+        then the second message gets through because it is not a duplicate of the first message.
+    </p>
+    <p>
+        You can log not only strings but also objects. If you log an object, the object is translated to a JSON string.
+        That string is than matched against the regular expressions.
+    </p>
+
+
+    <p>
+        Similar to other attributes, loggers inherit
+        <i>onceOnly</i>
+        from their parents. However, this is all or nothing. If you set
+        <i>onceOnly</i> regular expressions
+        for a logger, than any  <i>onceOnly</i> regular expressions that its parent may have had
+        are disregarded.
+    </p>
+
+
+
+
+
+
+    <h3>Examples</h3>
+
+    <p>
+        This sets the level of logger &quot;a.b&quot; to 3000.
+    </p>
+
+<pre>&lt;logger name="a.b" level="3000" /&gt;</pre>
+
+    <p>
+        This sets the level of the root logger.
+    </p>
+
+<pre>&lt;logger level="3000" /&gt;</pre>
+
+    <p>
+        This sets the level of logger &quot;a.b&quot; to INFO (which is the same as setting it to 3000).
+    </p>
+
+<pre>&lt;logger name="a.b" level="INFO" /&gt;</pre>
+
+    <p>
+        This sets the level to 4000.
+        It also disables the logger for all browsers, except those whose user agent string contains <i>MSIE 7|MSIE 8</i>
+        (that is, it is version 7 or 8 of Internet Explorer).
+    </p>
+
+<pre>&lt;logger name="a.b" userAgentRegex="MSIE 7|MSIE 8" level="4000" /&gt;</pre>
+
+    <p>
+        This creates an appender &quot;appender&quot; and then tells the logger &quot;a.b&quot; to send
+        all log messages to it.
+    </p>
+
+<pre>&lt;ajaxAppender name="appender" /&gt;
+&lt;logger name="a.b" appenders="appender" /&gt;</pre>
+
+    <p>
+        This creates two appenders and then tells the logger &quot;a.b&quot; to send
+        all log messages to them.
+    </p>
+
+<pre>&lt;ajaxAppender name="appender1" /&gt;
+&lt;ajaxAppender name="appender2" /&gt;
+&lt;logger name="a.b" appenders="appender1;appender2" /&gt;</pre>
+
+    <p>
+        Suppress duplicate messages that match the regular expression
+        &quot;Parameter x too high - x =&quot;.
+    </p>
+
+<pre>&lt;logger name=&quot;a&quot;&gt;
+    &lt;onceOnly regex=&quot;Parameter x too high - x =&quot; /&gt;
+&lt;/logger&gt;</pre>
+
+    <p>
+        Suppress duplicate messages that match the regular expression
+        &quot;Parameter x too high - x =&quot;. Also suppress duplicate messages that
+        match &quot;x = \d+ and y = \d+&quot;.
+    </p>
+
+<pre>&lt;logger name=&quot;a&quot;&gt;
+    &lt;onceOnly regex=&quot;Parameter x too high - x =&quot; /&gt;
+    &lt;onceOnly regex=&quot;x = \d+ and y = \d+&quot; /&gt;
+&lt;/logger&gt;</pre>
+
+    <p>
+        Loggers inherit
+        <i>onceOnly</i>
+        from their parents.
+        Assume you have a logger &quot;a.b&quot; whose parent &quot;a&quot; suppresses duplicates,
+        but you want logger &quot;a.b&quot; to not suppress duplicates. To make that happen, give it
+        a <i>onceOnly</i> collection without any regular expressions:
+    </p>
+
+<pre>&lt;logger name=&quot;a.b&quot;&gt;
+    &lt;onceOnly  /&gt;
+&lt;/logger&gt;</pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h2><a name="config-ajaxAppender"></a>&lt;ajaxAppender&gt; Element</h2>
+<p>
+    Configures an Ajax Appender.
+</p>
+
+
+
+    <h3>Definition</h3>
+
+
+
+
+<pre>&lt;configuration&gt; 
+    &lt;jsnlog&gt;
+        &lt;ajaxAppender 
+            name="string" 
+            level="number|TRACE|DEBUG|INFO|WARN|ERROR|FATAL|OFF|ALL"
+            userAgentRegex="regular expression"
+            ipRegex="regular expression"
+            disallow="regular expression"
+            storeInBufferLevel=
+                "number|TRACE|DEBUG|INFO|WARN|ERROR|FATAL|OFF|ALL"
+            sendWithBufferLevel=
+                "number|TRACE|DEBUG|INFO|WARN|ERROR|FATAL|OFF|ALL" 
+            bufferSize="number" 
+            batchSize="number" 
+            url="string" /&gt;
+     &lt;/jsnlog&gt;
+&lt;/configuration&gt; 
+</pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h3>Remarks</h3>
+
+
+
+
+    <p>
+        Loggers do not process log messages themselves. Instead, they pass them on
+        to an appender. That way, the attributes that have to do with for example sending log messages to the server
+        are centralized, making them more easy to manage.
+    </p>
+    <p>
+        JSNLog creates a default appender, so there is no need to create one yourself in order to start logging. Details
+        about this default appender, and how to associate loggers with appenders, are
+        <a href="#config-jsnlog">here</a><text>.</text>
+    </p>
+
+
+
+    <p>
+        The &lt;ajaxAppender&gt; element can have the following attributes:
+    </p>
+
+
+
+
+    <table class="border">
+
+
+
+        <thead>
+            <tr>
+                <th>Attribute</th>
+                <th style="width: 100px">Default</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+
+
+        <tbody>
+            <tr>
+                <td valign="top">name<br /><small>required</small></td>
+                <td valign="top"></td>
+                <td valign="top">Name of the AjaxAppender you want to configure.</td>
+            </tr>
+
+
+
+            <tr>
+                <td valign="top">level<br /><small>optional</small></td>
+                <td valign="top">TRACE</td>
+                <td valign="top">Only log messages with a severity equal or higher than this can be sent to the server.</td>
+            </tr>
+
+            <tr>
+                <td valign="top">userAgentRegex<br /><small>optional</small></td>
+                <td valign="top">(empty)</td>
+                <td valign="top">
+                    If not empty, log messages only get processed if this regular expression matches the
+                    <a href="http://www.useragentstring.com/" target="_blank">user agent string</a>
+                    of the browser.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">ipRegex<br /><small>optional</small></td>
+                <td valign="top">(empty)</td>
+                <td valign="top">
+                    If not empty, log messages only get processed if this regular expression matches the IP address
+                    of the browser.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">disallow<br /><small>optional</small></td>
+                <td valign="top">(empty)</td>
+                <td valign="top">
+                    If not empty, log messages are suppressed if they match this regular expression. If an object is being logged,
+                    it is converted to a JSON string, which is then matched.
+                </td>
+            </tr>
+
+
+            <tr>
+                <td valign="top">storeInBufferLevel<br /><small>optional</small></td>
+                <td valign="top">ALL</td>
+                <td valign="top">
+                    If the severity of the log message is equal or greater than this,
+                    but smaller than <i>level</i>,
+                    the log message will not be sent to the server, but stored in an internal buffer.
+                    <p>
+                        If <i>bufferSize</i> is 0 or less, the log message is simply ignored.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">sendWithBufferLevel<br /><small>optional</small></td>
+                <td valign="top">OFF</td>
+                <td valign="top">
+                    If the severity of a log message is equal or greater than this,
+                    not only the log message but also all log messages stored in the internal buffer
+                    will be sent to the server.
+                    <p>
+                        This allows you to store low priority trace messages in the internal buffer,
+                        and only send them when a high priority fatal message is sent.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">bufferSize<br /><small>optional</small></td>
+                <td valign="top">0</td>
+                <td valign="top">
+                    Sets the size of the buffer used with <i>sendWithBufferLevel</i> and
+                    <i>storeInBufferLevel</i>.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">batchSize<br /><small>optional</small></td>
+                <td valign="top">1</td>
+                <td valign="top">
+                    Allows you to improve performance by sending multiple log messages in one go,
+                    rather than one by one.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">url<br /><small>optional</small></td>
+                <td valign="top">jsnlog.logger</td>
+                <td valign="top">
+                    All log messages will be sent to this URL.
+                    The default url is as expected by the server side code of JSNLog.
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h4>Logger level and appender level</h4>
+    <p>
+        Notice that both
+        <a href="#config-jsnlog">loggers</a>
+        and appenders have a level. This means that a log message must have
+        a severity that is equal or higher than both these levels in order to be processed.
+    </p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h3>Examples</h3>
+
+    <p>
+        This
+        creates an appender with the behaviour below and than attaches it to the root logger:
+    </p>
+    <ul>
+        <li>
+            It has an internal buffer that stores at most 20 log messages;
+        </li>
+        <li>
+            Log messages with severity smaller than TRACE are ignored.
+        </li>
+        <li>
+            Log messages with severity equal or greater than TRACE and lower than WARN are stored in the internal buffer,
+            but not sent to the server;
+        </li>
+        <li>
+            Log messages with severity equal or greater than WARN and lower than FATAL are
+            sent to the server on their own;
+        </li>
+        <li>
+            Log messages with severity equal or greater than FATAL are
+            sent to the server, along with all messages stored in the internal buffer.
+        </li>
+    </ul>
+
+<pre>&lt;ajaxAppender 
+    name="appender1" 
+    storeInBufferLevel="TRACE" 
+    level="WARN" 
+    sendWithBufferLevel="FATAL" 
+    bufferSize="20"/&gt;
+&lt;logger appenders="appender1"/&gt;</pre>
+
+
+
+
+
+
+
+
+
+
+
+<h2><a name="config-consoleAppender"></a>&lt;consoleAppender&gt; Element</h2>
+<p>
+    Configures a Console Appender.
+</p>
+
+
+
+    <h3>Definition</h3>
+
+
+
+
+<pre>&lt;configuration&gt; 
+    &lt;jsnlog&gt;
+        &lt;consoleAppender 
+            name="string" 
+            level="number|TRACE|DEBUG|INFO|WARN|ERROR|FATAL|OFF|ALL"
+            userAgentRegex="regular expression"
+            ipRegex="regular expression"
+            disallow="regular expression"
+            storeInBufferLevel=
+                "number|TRACE|DEBUG|INFO|WARN|ERROR|FATAL|OFF|ALL"
+            sendWithBufferLevel=
+                "number|TRACE|DEBUG|INFO|WARN|ERROR|FATAL|OFF|ALL" 
+            bufferSize="number" 
+            batchSize="number" 
+        /&gt;
+    &lt;/jsnlog&gt;
+&lt;/configuration&gt; 
+</pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <h3>Remarks</h3>
+
+
+
+
+    <p>
+        JSNLog is based on the idea of integrating client side and server side logging - using the
+        <a href="#config-ajaxAppender">&lt;ajaxAppender&gt; Element</a>    to send log items to the server.
+    </p>
+    <p>
+        However, during development it can be useful to simply send log items to the
+        console provided by the F12 developer tools in
+        <a href="https://developers.google.com/chrome-developer-tools/docs/console" target="_blank">Chrome</a>,
+        <a href="http://getfirebug.com/" target="_blank">Firefox</a>
+        and
+        <a href="" target="_blank">Internet Explorer</a>.
+    </p>
+    <p>
+        That way, the log items appear immediately below your main browser window, so you don't have to check the server side log.
+    </p>
+    <h4>Sending log items from a logger to the console</h4>
+    <p>
+        To see the log items that are generated by a logger in the console, you first create a ConsoleAppender and then use the
+        <a href="#config-jsnlog">&lt;logger&gt; Element</a>    of the logger to
+        send all log items to that ConsoleAppender:
+    </p>
+
+<pre>&lt;!-- "mylogger" logs to just the console --&gt;
+&lt;consoleAppender name="consoleAppender" /&gt;
+&lt;logger name="mylogger" appenders="consoleAppender" /&gt;</pre>
+    <p>
+        However, this means that all log items will only go to the console, and no longer to the server.
+        If you want the log items to go to both the console and the server,
+        send them to an AjaxAppender as well as to a ConsoleAppender:
+    </p>
+
+<pre>&lt;!-- "mylogger" logs to both the server and the console --&gt;
+&lt;consoleAppender name="consoleAppender" /&gt;
+&lt;ajaxAppender name="ajaxAppender" /&gt;
+&lt;logger name="mylogger" appenders="ajaxAppender;consoleAppender" /&gt;</pre>
+
+    <h4>Sending log items from every logger to both the console and the server</h4>
+    <p>
+        It may be easiest to get all loggers to log to both the console and the server.
+        You can achieve this by using the
+        <a href="#config-jsnlog">&lt;logger&gt; Element</a>    of the root logger. Through
+        <a href="/Documentation/WebConfig/JSNLog/Logger#inheritance">inheritance</a>,
+        every other logger will start logging to both the console and the server as well.
+    </p>
+
+<pre>&lt;!-- Debugging: all loggers log to both the server and the console --&gt;
+&lt;consoleAppender name="consoleAppender" /&gt;
+&lt;ajaxAppender name="ajaxAppender" /&gt;
+&lt;logger appenders="ajaxAppender;consoleAppender" /&gt;</pre>
+
+    <h4>Switching off logging to the console</h4>
+    <p>
+        Once in production, you may want to stop logging to the console.
+        You can achieve this by removing the ConsoleAppender:
+    </p>
+
+<pre>&lt;!-- Production: loggers log to the server only --&gt;
+&lt;ajaxAppender name="ajaxAppender" /&gt;
+&lt;logger appenders="ajaxAppender" /&gt;</pre>
+    <p>
+        This means you don't have to go through your code to remove logging code - a simple change in
+        the web.config
+        is enough. Keep in mind that if you associate individual loggers with the ConsoleAppender,
+        you will have to remove that as well in order to stop all logging to the console.
+    </p>
+
+
+
+
+
+    <h4>Attributes</h4>
+    <p>
+        The &lt;consoleAppender&gt; element can have the following attributes:
+    </p>
+
+
+
+
+    <table class="border">
+
+
+
+        <thead>
+            <tr>
+                <th>Attribute</th>
+                <th style="width: 100px">Default</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+
+
+        <tbody>
+            <tr>
+                <td valign="top">name<br /><small>required</small></td>
+                <td valign="top"></td>
+                <td valign="top">Name of the ConsoleAppender you want to configure.</td>
+            </tr>
+
+
+
+            <tr>
+                <td valign="top">level<br /><small>optional</small></td>
+                <td valign="top">TRACE</td>
+                <td valign="top">Only log messages with a severity equal or higher than this can be sent to the server.</td>
+            </tr>
+
+            <tr>
+                <td valign="top">userAgentRegex<br /><small>optional</small></td>
+                <td valign="top">(empty)</td>
+                <td valign="top">
+                    If not empty, log messages only get processed if this regular expression matches the
+                    <a href="http://www.useragentstring.com/" target="_blank">user agent string</a>
+                    of the browser.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">ipRegex<br /><small>optional</small></td>
+                <td valign="top">(empty)</td>
+                <td valign="top">
+                    If not empty, log messages only get processed if this regular expression matches the IP address
+                    of the browser.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">disallow<br /><small>optional</small></td>
+                <td valign="top">(empty)</td>
+                <td valign="top">
+                    If not empty, log messages are suppressed if they match this regular expression. If an object is being logged,
+                    it is converted to a JSON string, which is then matched.
+                </td>
+            </tr>
+
+
+            <tr>
+                <td valign="top">storeInBufferLevel<br /><small>optional</small></td>
+                <td valign="top">ALL</td>
+                <td valign="top">
+                    If the severity of the log message is equal or greater than this,
+                    but smaller than <i>level</i>,
+                    the log message will not be sent to the server, but stored in an internal buffer.
+                    <p>
+                        If <i>bufferSize</i> is 0 or less, the log message is simply ignored.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">sendWithBufferLevel<br /><small>optional</small></td>
+                <td valign="top">OFF</td>
+                <td valign="top">
+                    If the severity of a log message is equal or greater than this,
+                    not only the log message but also all log messages stored in the internal buffer
+                    will be sent to the server.
+                    <p>
+                        This allows you to store low priority trace messages in the internal buffer,
+                        and only send them when a high priority fatal message is sent.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">bufferSize<br /><small>optional</small></td>
+                <td valign="top">0</td>
+                <td valign="top">
+                    Sets the size of the buffer used with <i>sendWithBufferLevel</i> and
+                    <i>storeInBufferLevel</i>.
+                </td>
+            </tr>
+
+            <tr>
+                <td valign="top">batchSize<br /><small>optional</small></td>
+                <td valign="top">1</td>
+                <td valign="top">
+                    Allows you to improve performance by sending multiple log messages in one go,
+                    rather than one by one.
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+
+    <h4>Logger level and appender level</h4>
+    <p>
+        Notice that both
+        <a href="#config-jsnlog">loggers</a>
+        and appenders have a level. This means that a log message must have
+        a severity that is equal or higher than both these levels in order to be processed.
+    </p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

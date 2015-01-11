@@ -1,0 +1,1139 @@
+
+Headline:
+Configuring your JavaScript loggers with JSNLog
+
+Tagline:
+Shows how to configure your JavaScript loggers with JSNLog, a JavaScript logging library that integrates well with your .Net site
+
+<ul class="download">
+<li><a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET#installation">Install JSNLog (recommended)</a></li>
+<li><a href="https://github.com/mperdeck/jsnlog" target="_blank">Source files and sample code</a></li>
+</ul>
+
+<p>
+Shows how to configure your JavaScript loggers with 
+<a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET">JSNLog</a>, a JavaScript logging library that is well integrated with .Net.
+It lets you configure loggers in your web.config.
+And it lets you receive log messages from the client and store them on the server, without any coding.
+</p>
+
+<h2>Contents of this series</h2>
+
+<ul>
+<li><a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET#installation">Installation</a></li>
+<li><a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET#shortstory">Getting Started - short version</a></li>
+<li><a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET#longstory">Getting Started - detailed version</a></li>
+<li><a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#clientside">Inserting loggers in your JavaScript</a></li>
+<li><strong>Configuring your loggers in web.config</strong></li>
+</ul>
+
+<h2><a name="configuration"></a>Configuring your loggers in web.config</h2>
+
+<ul>
+<li><a href="#config-jsnlog">&lt;jsnlog&gt; Element</a></li>
+<li><a href="#config-appender">&lt;appender&gt; Element</a></li>
+<li><a href="#config-root">&lt;root&gt; Element</a></li>
+<li><a href="#config-logger">&lt;logger&gt; Element</a></li>
+<li><a href="#config-level">&lt;level&gt; Element</a></li>
+<li><a href="#config-userAgentRegex">&lt;userAgentRegex&gt; Element</a></li>
+<li><a href="#config-ipRegex">&lt;ipRegex&gt; Element</a></li>
+<li><a href="#config-appender-ref">&lt;appender-ref&gt; Element</a></li>
+<li><a href="#config-batchSize">&lt;batchSize&gt; Element</a></li>
+<li><a href="#config-timerInterval">&lt;timerInterval&gt; Element</a></li>
+</ul>
+
+
+<h3><a name="config-jsnlog"></a>&lt;jsnlog&gt; Element</h3>
+
+<p>
+The root element for all JSNLog configuration elements.
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   &lt;<strong>jsnlog</strong>&gt;
+</p>
+
+<h4>Attributes</h4>
+
+<table border="1" cellspacing="0" cellpadding="4">
+<tbody><tr valign="top">
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+
+<tr valign="top">
+<td>
+enabled<br /><small><em>optional</em></small>
+</td>
+<td valign="top">
+    Allows you to disable all loggers in one go.
+    <dl>
+    <dt>Values</dt>
+    <dd>
+        <table border="0">
+        <tbody><tr valign="top">
+        <td>
+        true<br /><small><em>default</em></small>
+        </td>
+        <td>
+        Library is enabled.
+        </td>
+        </tr>
+        <tr valign="top">
+        <td>
+        false
+        </td>
+        <td>
+        Library is disabled. All loggers switched off.
+        </td>
+        </tr>
+        </tbody></table>
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;jsnlog enabled=&quot;false&quot; ... &gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+<tr valign="top">
+<td>
+productionLibraryPath<br /><small><em>optional</em></small>
+</td>
+<td>
+    Path to the jsnlog.js file. JSNLog generates a &lt;script&gt; tag with this url.
+    <p>
+    If you do not specify this, JSNLog will not generate the &lt;script&gt; tag.
+    This makes sense if you for example combine jsnlog.js with your other JavaScript files and you use
+    your own &lt;script&gt; tag to load this combined file.
+    </p><dl>
+    <dt>Values</dt>
+    <dd>
+        Url
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;jsnlog productionLibraryPath=&quot;~/Scripts/jsnlog/jsnlog.min.js&quot; ... &gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+<tr valign="top">
+<td>
+stubPath<br /><small><em>optional</em></small>
+</td>
+<td>
+    Path to the stub version of the jsnlog.js file. 
+    When JSNLog is disabled, it generates a &lt;script&gt; tag with this url.
+    <p>
+    The stub version, jsnlog_stub.js, is much shorter than the production version. It has just enough code
+    to ensure that the logger code in your JavaScript doesn't generate exceptions.
+    </p><p>
+    If you do not specify this and you disable JSNLog, the production version will be used
+    using the <em>productionLibraryPath</em> attribute. If that attribute is not specified either,
+    no &lt;script&gt; tag will be generated.
+    </p><dl>
+    <dt>Values</dt>
+    <dd>
+        Url
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;jsnlog productionLibraryPath=&quot;~/Scripts/jsnlog/jsnlog_stub.min.js&quot; ... &gt;
+    </dd>
+    </dl>
+
+</td>
+</tr><tr valign="top">
+<td>
+serverSideLogger<br /><small><em>optional</em></small>
+</td>
+<td>
+    By default, all log messages from your JavaScript code are passed on to your
+    server side logging package with the name of the JavaScript logger.
+    <p>
+    However, if you want to use a specific logger name for all your
+    JavaScript log messages, you can specify that with this attribute.
+    </p><dl>
+    <dt>Values</dt>
+    <dd>
+        Any string
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;jsnlog serverSideLogger=&quot;jslogger&quot; ... &gt;
+    </dd>
+    </dl>
+
+</td>
+</tr>
+<tr valign="top">
+<td>
+serverSideMessageFormat<br /><small><em>optional</em></small>
+</td>
+<td>
+    Your server not only receives the
+    the original message passed into the JavaScript logger,
+    but also the logger, the level, a timestamp, etc.
+    <p>
+    You can choose to have this additional information logged on the server
+    along with the original message, by setting <em>serverSideMessageFormat</em>
+    to a format string with place holders:
+    </p><p>
+    <table border="0" cellpadding="4">
+    <tbody><tr>
+    <th align="left">Place holder</th>
+    <th align="left">Is replaced by</th>
+    </tr>
+    <tr valign="top">
+    <td>%message</td>
+    <td>Original message given to the JavaScript logger</td>
+    </tr>
+    <tr valign="top">
+    <td>%utcdate</td>
+    <td>Date and time in UTC when the message was generated, according to the client's clock</td>
+    </tr>
+    <tr valign="top">
+    <td>%level</td>
+    <td>Level of the message, as provided by the JavaScript code</td>
+    </tr>
+    <tr valign="top">
+    <td>%userAgent</td>
+    <td>Identifies the make of browser</td>
+    </tr>
+    <tr valign="top">
+    <td>%userHostAddress</td>
+    <td>IP address of the sender</td>
+    </tr>
+    <tr valign="top">
+    <td>%url</td>
+    <td>Url of the page on which the message was generated</td>
+    </tr>
+    <tr valign="top">
+    <td>%logger</td>
+    <td>JavaScript logger that generated the message</td>
+    </tr>
+    <tr valign="top">
+    <td>%newline</td>
+    <td>Newline character</td>
+    </tr>
+    </tbody></table>
+
+    </p><dl>
+    <dt>Values</dt>
+    <dd>
+        Any string
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;jsnlog serverSideMessageFormat=&quot;Sent: %utcdate, Brower: %userAgent - %message&quot; ... &gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+<tr valign="top">
+<td>
+serverSideLevel<br /><small><em>optional</em></small>
+</td>
+<td>
+    By default, all log messages from your JavaScript code are passed on to your
+    server side logging package with the same level as the original
+    JavaScript log message.
+    <p>
+    However, if you want to use a specific level, you can specify that with this attribute.
+    </p><dl>
+    <dt>Values</dt>
+    <dd>
+        &quot;TRACE&quot;, &quot;DEBUG&quot;, &quot;INFO&quot;, &quot;WARN&quot;, &quot;ERROR&quot; or &quot;FATAL&quot;
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;jsnlog serverSideLevel=&quot;INFO&quot; ... &gt;
+    </dd>
+    </dl>
+
+</td>
+</tr>
+
+</tbody></table>
+
+<h4>Child Elements</h4>
+
+<table border="1" cellspacing="0" cellpadding="4">
+<tbody><tr valign="top">
+<th>Element</th>
+<th>Description</th>
+</tr>
+<tr valign="top">
+<td>
+<a href="#config-appender">&lt;appender&gt;</a>
+</td>
+<td>
+Configures an appender.
+</td>
+</tr>
+
+<tr valign="top">
+<td>
+<a href="#config-root">&lt;root&gt;</a>
+</td>
+<td>
+Lets you configure the root logger.
+</td>
+</tr>
+
+<tr valign="top">
+<td>
+<a href="#config-logger">&lt;logger&gt;</a>
+</td>
+<td>
+Lets you configure a logger.
+</td>
+</tr>
+</tbody></table>
+
+<h3><a name="config-appender"></a>&lt;appender&gt; Element</h3>
+
+<p>
+Used to configure appenders.
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <strong>&lt;appender&gt;</strong>
+</p>
+
+<h4>Attributes</h4>
+
+<table border="1" cellspacing="0" cellpadding="4">
+<tbody><tr valign="top">
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+<tr valign="top">
+<td>
+name<br /><small><em>required</em></small>
+</td>
+<td>
+    Name of the appender. Used in 
+    <a href="#config-appender-ref">&lt;appender-ref&gt;</a> elements to refer to this appender.
+    <dl>
+    <dt>Values</dt>
+    <dd>
+        Any string
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;appender name=&quot;appender1&quot; ... &gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+<tr valign="top">
+<td>
+url<br /><small><em>optional</em></small>
+</td>
+<td>
+    All messages processed by this appender will be sent to this URL.
+    <p>
+    Default value is <em>jsnlog.logger</em>. You will want to stick with this unless you have a very 
+    good reason not to.
+    </p><dl>
+    <dt>Values</dt>
+    <dd>
+        Any valid URL
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;appender url=&quot;alternate.logger&quot; ... &gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+</tbody></table>
+
+
+<h4>Child Elements</h4>
+
+<table border="1" cellspacing="0" cellpadding="4">
+<tbody><tr valign="top">
+<th>Element</th>
+<th>Description</th>
+</tr>
+<tr valign="top">
+<td>
+<a href="#config-level">&lt;level&gt;</a>
+</td>
+<td>
+Sets the level of the appender. Messages with severity lower than this will not be processed.
+</td>
+</tr>
+
+<tr valign="top">
+<td>
+<a href="#config-userAgentRegex">&lt;userAgentRegex&gt;</a>
+</td>
+<td>
+Lets you enable the appender only for given user agents.
+</td>
+</tr>
+
+<tr valign="top">
+<td>
+<a href="#config-ipRegex">&lt;ipRegex&gt;</a>
+</td>
+<td>
+Lets you enable the appender only for given client IP addresses.
+</td>
+</tr>
+
+<tr valign="top">
+<td>
+<a href="#config-batchSize">&lt;batchSize&gt;</a>
+</td>
+<td>
+Sets the batch size used by an appender. After this many messages have been sent to the appender, it
+will send all these messages in a single request to the server. 
+</td>
+</tr>
+<tr valign="top">
+<td>
+<a href="#config-timerInterval">&lt;timerInterval&gt;</a>
+</td>
+<td>
+Sets the batching interval 
+(<a href="#config-batchSize">difference between batch size and batching interval</a>).
+</td>
+</tr>
+
+</tbody></table>
+
+<h3><a name="config-root"></a>&lt;root&gt; Element</h3>
+
+<p>
+Lets you configure the root logger.
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <strong>&lt;root&gt;</strong>
+</p>
+
+<h4>Attributes</h4>
+
+<p>
+The &lt;root&gt; element has no attributes.
+</p>
+<h4>Child Elements</h4>
+
+<table border="1" cellspacing="0" cellpadding="4">
+<tbody><tr valign="top">
+<th>Element</th>
+<th>Description</th>
+</tr>
+<tr valign="top">
+<td>
+<a href="#config-level">&lt;level&gt;</a>
+</td>
+<td>
+Sets the level of the root logger. Messages with severity lower than this will not be sent.
+</td>
+</tr>
+
+<tr valign="top">
+<td>
+<a href="#config-userAgentRegex">&lt;userAgentRegex&gt;</a>
+</td>
+<td>
+Lets you enable the root logger only for given user agents.
+</td>
+</tr>
+
+<tr valign="top">
+<td>
+<a href="#config-ipRegex">&lt;ipRegex&gt;</a>
+</td>
+<td>
+Lets you enable the root logger only for given client IP addresses.
+</td>
+</tr>
+
+<tr valign="top">
+<td>
+<a href="#config-appender-ref">&lt;appender-ref&gt;</a>
+</td>
+<td>
+Associates an appender with the root logger.
+</td>
+</tr>
+</tbody></table>
+
+<h4>Default appender for the root logger</h4>
+<p>
+If you do not associate an appender with the root logger,
+JSNLog will create a default appender behind the scenes and associate that with the root logger for you.
+That way, you can start logging without having to configure things in your web.config.
+</p>
+
+<h3><a name="config-logger"></a>&lt;logger&gt; Element</h3>
+
+<p>
+Allows you to configure a logger.
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   &lt;<a href="#config-jsnlog">jsnlog</a>&gt;
+<br />
+      <strong>&lt;logger&gt;</strong>
+</p>
+
+<h4>Attributes</h4>
+
+<table border="1" cellspacing="0" cellpadding="4">
+<tbody><tr valign="top">
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+<tr valign="top">
+<td>
+name<br /><small><em>required</em></small>
+</td>
+<td>
+    Name of the logger to be configured.
+    <dl>
+    <dt>Values</dt>
+    <dd>
+        Any string
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;logger name=&quot;clickhandler.entryform.widget&quot; ... &gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+<tr valign="top">
+<td>
+<a name="config-logger-additivity"></a>additivity<br /><small><em>optional</em></small>
+</td>
+<td>
+    Determines whether this logger inherits appenders from its ancestors.
+    <dl>
+    <dt>Values</dt>
+    <dd>
+        <table border="0">
+        <tbody><tr valign="top">
+        <td>
+        true<br /><small><em>default</em></small>
+        </td>
+        <td>
+        This logger inherits the appenders used by its ancestors.
+        </td>
+        </tr>
+        <tr valign="top">
+        <td>
+        false
+        </td>
+        <td>
+        This logger does not inherit appenders. Unless you 
+        explicitly give this logger an appender with an
+        <a href="#config-appender-ref">&lt;appender-ref&gt;</a> element,
+        its log messages will not be processed.
+        </td>
+        </tr>
+        </tbody></table>
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;logger additivity=&quot;false&quot; ... &gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+</tbody></table>
+
+<h4>Child Elements</h4>
+
+<table border="1" cellspacing="0" cellpadding="4">
+<tbody><tr valign="top">
+<th>Element</th>
+<th>Description</th>
+</tr>
+<tr valign="top">
+<td>
+<a href="#config-level">&lt;level&gt;</a>
+</td>
+<td>
+Sets the level of this logger. Messages with severity lower than this will not be sent.
+</td>
+</tr>
+
+<tr valign="top">
+<td>
+<a href="#config-userAgentRegex">&lt;userAgentRegex&gt;</a>
+</td>
+<td>
+Lets you enable the logger only for given user agents.
+</td>
+</tr>
+
+<tr valign="top">
+<td>
+<a href="#config-ipRegex">&lt;ipRegex&gt;</a>
+</td>
+<td>
+Lets you enable the logger only for given client IP addresses.
+</td>
+</tr>
+
+<tr valign="top">
+<td>
+<a href="#config-appender-ref">&lt;appender-ref&gt;</a>
+</td>
+<td>
+Associates an appender with this logger.
+</td>
+</tr>
+</tbody></table>
+
+<h3><a name="config-level"></a>&lt;level&gt; Element</h3>
+
+<p>
+Sets the level of a logger or appender.
+Any messages with a level below this will not be processed.
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-appender">&lt;appender&gt;</a>
+<br />
+         <strong>&lt;level&gt;</strong>
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-root">&lt;root&gt;</a>
+<br />
+         <strong>&lt;level&gt;</strong>
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-logger">&lt;logger&gt;</a>
+<br />
+         <strong>&lt;level&gt;</strong>
+</p>
+
+
+<table border="1" cellspacing="0" cellpadding="4">
+<tbody><tr valign="top">
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+<tr valign="top">
+<td>
+value<br /><small><em>required</em></small>
+</td>
+<td>
+    The new level.
+    <dl>
+    <dt>Values</dt>
+    <dd>
+            &quot;TRACE&quot;, &quot;DEBUG&quot;, &quot;INFO&quot;, &quot;WARN&quot;, &quot;ERROR&quot; or &quot;FATAL&quot;
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;logger ... &gt;<br />
+           <strong>&lt;level value=&quot;ERROR&quot;&gt;</strong><br />
+        &lt;/logger&gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+</tbody></table>
+
+<p>
+For a message to get logged, it must have a severity equal or higher than that of the logger.
+It will then be sent to the appenders associated with the logger. However, those appenders have a level as well - only those appenders
+whose level is not higher than that of the message will process the message.
+</p>
+
+<p>
+Default levels:
+</p>
+
+<ul>
+<li>
+If you do not set the level for a logger, it inherits the level from its 
+<a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET#long-logger-inheritance">parent</a>.
+</li>
+<li>
+If you do not set the level for the root logger, its level defaults to DEBUG.
+</li>
+<li>
+The default level for appenders is TRACE.
+</li>
+</ul>
+
+<p>
+This means that if you do not set any levels, messages with severity TRACE do not get logged.
+This because their level is below the default DEBUG level of loggers.
+</p>
+
+
+<h2><a name="config-userAgentRegex"></a>&lt;userAgentRegex&gt; Element</h2>
+
+<p>
+If userAgentRegex is set for a logger or appender, it only processes log messages if the user agent of the client matches this regular expression.
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-appender">&lt;appender&gt;</a>
+<br />
+         <strong>&lt;userAgentRegex&gt;</strong>
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-root">&lt;root&gt;</a>
+<br />
+         <strong>&lt;userAgentRegex&gt;</strong>
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-logger">&lt;logger&gt;</a>
+<br />
+         <strong>&lt;userAgentRegex&gt;</strong>
+</p>
+
+
+<table class="border">
+<tbody><tr valign="top">
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+<tr valign="top">
+<td>
+value<br /><small><em>required</em></small>
+</td>
+<td>
+    The new regular expression to match against the user agent string of the client.
+    <dl>
+    <dt>Values</dt>
+    <dd>
+            A regular expression
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;logger ... &gt;<br />
+           <strong>&lt;userAgentRegex value=&quot;MSIE 7&quot;&gt;</strong><br />
+        &lt;/logger&gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+</tbody></table>
+
+<p>
+This element is similar to <a href="#config-level">&lt;level&gt;</a>, in that it lets you filter log messages, both by logger and by appender.
+However, instead of looking at the level of the message, it looks at the user agent (that is, type of browser) used by the client.
+</p>
+<p>
+For example, you might have a JavaScript function that works well, except in Internet Explorer 7. To investigate the issue, you have inserted a logger
+to provide more information. But to reduce unnecessary load on your server, you only want it to log messages if the client actually runs Internet Explorer 7.
+</p>
+<p>
+Looking at the 
+<a href="http://www.useragentstring.com/pages/Internet%20Explorer/" target="_blank">user agent strings for Internet Explorer 7</a>,
+you'll find that you can identify Internet Explorer 7 by checking if it contains &quot;MSIE 7&quot;. So to ensure that your logger only sends messages
+if the client runs Internet Explorer 7, you'd add this to your logger:
+</p>
+<pre>&lt;userAgentRegex value=&quot;MSIE 7&quot;&gt;
+</pre>
+<p>
+If you want to do this for a number of loggers, it might be easier to 
+<a href="#config-appender-ref">associate them with an appender</a>, and add an  
+userAgentRegex element to the appender. That way, you can switch user agent filtering on or off in one go on the appender. 
+</p>
+<p>
+Because userAgentRegex is a regular expression, you could match against multiple user agents. For example:
+</p>
+<pre>&lt;userAgentRegex value=&quot;MSIE 7|MSIE 8&quot;&gt;
+</pre>
+<p>
+To match all user agents (that is, to stop filtering), set userAgentRegex to empty:
+</p>
+<pre>&lt;userAgentRegex value=&quot;&quot;&gt;
+</pre>
+
+
+<p>
+Default levels:
+</p>
+
+<ul>
+<li>
+If you do not set the userAgentRegex for a logger, it inherits the userAgentRegex from its 
+<a href="@Url.Action(">parent</a>.
+</li>
+<li>
+If you do not set the userAgentRegex for the root logger, it won't do any filtering by user agent.
+</li>
+<li>
+By default, appenders do not filter by user agent.
+</li>
+</ul>
+
+<p>
+This means that if you do not set userAgentRegex anywhere, there will be no filtering by user agent.
+</p>
+
+<h2><a name="config-ipRegex"></a>&lt;ipRegex&gt; Element</h2>
+
+<p>
+If ipRegex is set for a logger or appender, it only processes log messages if the IP address of the client matches this regular expression.
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-appender">&lt;appender&gt;</a>
+<br />
+         <strong>&lt;ipRegex&gt;</strong>
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-root">&lt;root&gt;</a>
+<br />
+         <strong>&lt;ipRegex&gt;</strong>
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-logger">&lt;logger&gt;</a>
+<br />
+         <strong>&lt;ipRegex&gt;</strong>
+</p>
+
+
+<table class="border">
+<tbody><tr valign="top">
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+<tr valign="top">
+<td>
+value<br /><small><em>required</em></small>
+</td>
+<td>
+    The new regular expression to match against the IP address of the client.
+    <dl>
+    <dt>Values</dt>
+    <dd>
+            A regular expression
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;logger ... &gt;<br />
+           <strong>&lt;ipRegex value=&quot;127&quot;&gt;</strong><br />
+        &lt;/logger&gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+</tbody></table>
+
+<p>
+This element is similar to <a href="#config-level">&lt;level&gt;</a> and <a href="#config-userAgentRegex">&lt;userAgentRegex&gt;</a>, 
+in that it lets you filter log messages, both by logger and by appender.
+However, instead of looking at the level of the message or the user agent, it looks at the IP address of the client.
+You might use this if you are getting complaints from a particular client and you know their IP address(es).
+</p>
+<p>
+For example, 
+to only get log messages for IP addresses 124.171.21.215 and 124.171.21.216, you would use:
+</p>
+<pre>&lt;ipRegex value=&quot;124\.171\.21\.215|124\.171\.21\.216&quot;&gt;
+</pre>
+<p>
+To match all IP addresses (that is, to stop filtering), set ipRegex to empty:
+</p>
+<pre>&lt;ipRegex value=&quot;&quot;&gt;
+</pre>
+
+<p>
+Default levels:
+</p>
+
+<ul>
+<li>
+If you do not set the ipRegex for a logger, it inherits the ipRegex from its 
+<a href="@Url.Action(">parent</a>.
+</li>
+<li>
+If you do not set the ipRegex for the root logger, it won't do any filtering by IP address.
+</li>
+<li>
+By default, appenders do not filter by IP address.
+</li>
+</ul>
+
+<p>
+This means that if you do not set ipRegex anywhere, there will be no filtering by IP address.
+</p>
+
+<h3><a name="config-appender-ref"></a>&lt;appender-ref&gt; Element</h3>
+
+<p>
+Associates an appender with a logger.
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-root">&lt;root&gt;</a>
+<br />
+         <strong>&lt;appender-ref&gt;</strong>
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-logger">&lt;logger&gt;</a>
+<br />
+         <strong>&lt;appender-ref&gt;</strong>
+</p>
+
+
+<table border="1" cellspacing="0" cellpadding="4">
+<tbody><tr valign="top">
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+<tr valign="top">
+<td>
+ref<br /><small><em>required</em></small>
+</td>
+<td>
+    The name of the appender to associate with this logger.
+    <dl>
+    <dt>Values</dt>
+    <dd>
+        Name of an appender
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;appender name=&quot;appender1&quot;&gt;<br />
+           ...<br />
+        &lt;/appender&gt;<br />
+        <br />
+        &lt;root&gt;<br />
+           <strong>&lt;appender-ref ref=&quot;appender1&quot;&gt;</strong><br />
+        &lt;/root&gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+</tbody></table>
+
+
+<h3><a name="config-batchSize"></a>&lt;batchSize&gt; Element</h3>
+
+<p>
+Sets the batch size used by an appender.
+See the 
+<a href="#batchingtypes">remarks</a> further down about the different types of batching.
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-appender">&lt;appender&gt;</a>
+<br />
+         <strong>&lt;batchSize&gt;</strong>
+</p>
+
+
+<table border="1" cellspacing="0" cellpadding="4">
+<tbody><tr valign="top">
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+<tr valign="top">
+<td>
+value<br /><small><em>required</em></small>
+</td>
+<td>
+    The new batch size. If this element is not used with an appender, the default value is 1.
+    <dl>
+    <dt>Values</dt>
+    <dd>
+        Integer equal to or greater than 1.
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;appender ... &gt;<br />
+           <strong>&lt;batchSize value=&quot;2&quot;&gt;</strong><br />
+        &lt;/appender&gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+</tbody></table>
+
+<a name="batchingtypes"></a><h4>Remarks</h4>
+<p>
+Batching allows you to send multiple log messages in a single request to the server.
+This reduces the amount of traffic you send over the Internet and the load on your server.
+</p>
+<p>
+JSNLog supports two types of batching:
+</p>
+<ul>
+<li>
+<strong>Size based.</strong>
+Here batches contain a fixed number of messages.
+After this many messages have been sent to the appender
+will the appender send all these messages in a single request to the server. 
+Set this with the 
+<a href="#config-batchSize">&lt;batchSize&gt; Element</a>.
+</li>
+<li>
+<strong>Time based.</strong>
+Here all messages generated in a given time interval are batched.
+For example:
+<ol>
+<li>
+Assume you set the interval to 1000 milli seconds (that is, 1 second);
+</li>
+<li>
+The first message is generated by a logger;
+</li>
+<li>
+That message and all subsequent messages get batched up in memory until a second has passed.
+</li>
+<li>
+The moment a message is generated more than a second after the first message, this message and all the batched up messages
+are sent in a single batch to the server.
+</li>
+<li>
+Go back to 1. when a new message is generated.
+</li>
+</ol>
+<p>
+The
+<a href="#config-timerInterval">&lt;timerInterval&gt;</a> element
+activate this batch type and sets the time interval.
+</p>
+</li>
+</ul>
+
+<h3><a name="config-timerInterval"></a>&lt;timerInterval&gt; Element</h3>
+
+<p>
+Sets the time interval for 
+<a href="#batchingtypes">time based batching</a> by an appender.
+</p>
+
+<p>
+&lt;configuration&gt;
+<br />
+   <a href="#config-jsnlog">&lt;jsnlog&gt;</a>
+<br />
+      <a href="#config-appender">&lt;appender&gt;</a>
+<br />
+         <strong>&lt;timerInterval&gt;</strong>
+</p>
+
+
+<table border="1" cellspacing="0" cellpadding="4">
+<tbody><tr valign="top">
+<th>Attribute</th>
+<th>Description</th>
+</tr>
+<tr valign="top">
+<td>
+value<br /><small><em>required</em></small>
+</td>
+<td>
+    The new timer interval in milli seconds. If this element is not used with an appender, no time based batching is used.
+    <dl>
+    <dt>Values</dt>
+    <dd>
+        Integer equal to or greater than 1.
+    </dd>
+
+    <dt>Example</dt>
+    <dd>
+        &lt;appender ... &gt;<br />
+           <strong>&lt;timerInterval value=&quot;500&quot;&gt;</strong><br />
+        &lt;/appender&gt;
+    </dd>
+    </dl>
+</td>
+</tr>
+</tbody></table>
+
+
+<p>If you like this article, please vote for it. </p>
+

@@ -1,0 +1,537 @@
+
+<h1>Logging client side events</h1>
+
+<p>
+    Know what your application is up to after it has gone into production.
+</p>
+
+<h2>Introduction</h2>
+
+<p>
+    A JavaScript application is like your favorite child. 
+    You shower it with love, prepare it for life the best way you can, and then send it 
+    into production where it faces users that do thing you never imagined and servers slower than you thought possible.
+</p>
+<p>
+    The issue is that now your application is live, there will be users. If the users are not happy, they will complain to your
+    manager (or your client). This in turn has the potential to make you unhappy. You don't want unhappy users.
+</p>
+<p>
+    To keep your users happy, you want to know whether their experience is good and if not, fix it. In restaurants, the waiter comes to your table
+    and asks if everything is ok. You could call your users, but unless you have only a few, it is easier to ask your application instead. After all,
+    it can talk to you in a way a restaurant meal can't.
+</p>
+<p>
+    Specifically, you will want to know about:
+</p>
+<ol>
+    <li>
+        Exceptions. Any syntax error or undefined variable will cause one of these. Yes, they will happen no matter how well you craft and test your code.
+    </li>
+    <li>
+        Failed AJAX requests. You'll want to know about unreliable servers.
+    </li>
+<li>
+   Lengthy AJAX requests. A user still looking at a spinner after 10 seconds is not a happy user.
+     When a request takes too long, you want to know about it, so you know how often it happens, which server is involved, etc.
+</li>
+    <li>
+        Debug data. Users are reporting bugs that you can't reproduce in your dev environment. 
+        So you add code to tell you what's going on in production. You want to control this from a central point, without 
+        adding and removing lines deep inside your code.
+    </li>
+</ol>
+
+<p>
+    Ok, so you need client side logging. However:
+</p>
+<ol>
+    <li>
+        You don't want to be swamped with log data. You'll want filters to give you only the good stuff.
+    </li>
+    <li>
+        The log data needs to go into your server side logs. That way, you can get at it.
+    </li>
+    <li>
+        You'll want to correlate client side and server side log data, so you know what log data refers to the same request. 
+    </li>
+    <li>
+        Ideally, you could control everything via a configuration file on the server, without changing your JavaScript code.
+    </li>
+</ol>
+
+<p>
+    There are many logging packages for JavaScript, including
+    <a href="http://earthcode.com/blog/2005/12/jslog.html">JSLog</a>,
+    <a href="http://log4js.berlios.de/">Log4js</a> and
+    <a href="http://log4javascript.org/">log4javascript</a>.
+
+    In this article, you'll meet 
+    <a href="http://js.jsnlog.com/">JSNLog</a>, a relatively new JavaScript package that ticks all these boxes. It is open source, and at 1.5kb about the size of a small image.
+</p>
+
+<h2>Let's do some logging</h2>
+
+<p>
+    <a href="http://js.jsnlog.com/">Download JSNLog</a> and load it in your site:
+</p>
+
+<pre>&lt;script src="javascript.js"&gt;&lt;/script&gt;</pre>
+
+<p>
+    Then to log something to the server, use:
+</p>
+
+<pre>JL().info("log message");</pre>
+
+<p>
+    JSNLog provides lots of options, named loggers, etc. But if you simply want to log something, this is all it takes.
+</p>
+
+<p>
+    You can pass in strings, objects and functions. If you pass in a function, it will execute the function and then log whatever the function returns. 
+</p>
+<p>
+    It not only sends the log data, but also the time, browser type, etc.
+</p>
+
+<a id="howitworks"></a>
+<h2>How it works</h2>
+<p>
+    The code calls the function <i>JL()</i>, which returns a logger. It then calls function <i>info</i> on that logger to log an info message.
+</p>
+<p>
+    The logger takes the message and hands it off to the AJAX appender, a piece of code inside JSNLog that sends the log message to the server.
+</p>
+    <img src="howitworks.png">
+
+<p>
+Besides the JavaScript only version of JSNLog, there is also 
+    <a href="http://jsnlog.com/">JSNLog for .Net</a>
+     and 
+    <a href="https://github.com/pnellesen/JSPHPLog">JSPHPLog</a> (JSNLog for PHP). These versions add a server side component that automatically
+    receives the log messages and logs them in your server log.
+</p>
+<p>
+    If you use Java, Python or some other technology for which there is no server side component, the
+    JSNLog documentation has the 
+    <a href="http://js.jsnlog.com/Documentation/DownloadInstall">format of the log messages</a>.
+    After you've built your component, the 
+    <a href="https://github.com/mperdeck/jsnlog/issues?state=open">authors of JSNLog</a>
+     will be happy to link to your project.
+</p>
+
+<p>
+    If terms such as &quot;appender&quot; and &quot;info&quot; have a familiar ring, that makes sense.
+    JSNLog gets its inspiration from Log4J and its offshoots, but then adds its own sauce in the form of 
+    a shortened and simplified syntax and features to make it work better on the client.
+</p>
+
+<h2>Real world scenarios</h2>
+
+<p>
+    To log any exceptions so you know there is a bug in your code, 
+    you can use <a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers.onerror">windows.onerror</a>. This handler is invoked
+    by the browser for each uncaught exception:
+</p>
+
+<pre>window.onerror = function myErrorHandler(errorMsg, url, lineNumber) {
+    // Send message with severity fatal
+    JL().fatal("Exception - " + errorMsg + ", url: " + url + ", line number: " + lineNumber);
+    return false;
+}</pre>
+
+<p>
+If instead of all exceptions you are only interested in exceptions in some specific piece of code, you could use 
+    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/try...catch">try catch</a>:
+</p>
+
+<pre>try {
+    // Code that may throw exception
+}
+catch (e) {
+    // e contain a string or object with exception data
+    JL().fatal(e);
+
+    // Handle the exception, ignore it, or throw it again using throw e
+}</pre>
+
+<p>
+    To get a log message if an AJAX request has failed, or has taken too long:
+</p>
+
+<pre>
+var msBeforeAjaxCall = new Date().getTime();
+
+// Send AJAX request and receive response
+
+<a href="https://api.jquery.com/jQuery.ajax/">$.ajax</a>( "url" )
+.done(function() {
+    alert( "success" );
+})
+.fail(function() {
+    // Send a message with severity error if AJAX request failed
+    JL().error("Request to ..... failed.");
+})
+.always(function() {
+    // Send error message if response took longer than 10 seconds to arrive
+
+    var msAfterAjaxCall = new Date().getTime();
+    var timeTakenInMs = msAfterAjaxCall - msBeforeAjaxCall;
+    if (timeTakenInMs > 10000) {
+        JL().error("Request to ..... took " + timeTakenInMs + " ms.");
+    }
+});
+</pre>
+
+<h2>Reducing generated log data</h2>
+<p>
+One problem with loggers is that they can generate a lot of useless data.
+    JSNLog includes many options to get the data you actually want.
+</p>
+<p>You can set these options at any time after the JSNLog library has loaded, for example during page load.
+</p>
+<p>
+     If you use .Net, the options can be set not only on the client in JavaScript, but also on the server in a configuration file.
+</p>
+
+<h3>Switching loggers on and off</h3>
+<p>
+    When you log something, you can give it severity:
+</p>
+<pre>
+    JL().trace("message with severity trace");
+    JL().debug("message with severity debug");
+    JL().info("message with severity info");
+    JL().warn("message with severity warn");
+    JL().error("message with severity error");
+    JL().fatal("message with severity fatal");
+</pre>
+<p>You've already seen <i>info()</i>, <i>error()</i> and <i>fatal()</i> in the examples above.</p>
+
+<p>
+    To filter out all messages below a given severity:
+</p>
+
+<pre>// Only send error and fatal log messages
+JL().setOptions({ "level": JL.getErrorLevel() }); </pre>
+
+<p>
+    To stop all messages:
+</p>
+
+<pre>// Stop all messages
+JL().setOptions({ "level": JL.getOffLevel() }); </pre>
+
+<p>
+    It is easiest to set these options in one central spot on page load. They will be in effect globally throughout your application. 
+</p>
+
+<h3>Named loggers</h3>
+<p>
+    If you do logging in multiple places,
+    having just one logger quickly gets limiting.
+    What if you want to have debug logging
+    in some functions, but only error logging everywhere else?
+</p>
+<p>
+    The solution is to use named loggers:
+</p>
+
+<pre>
+// Set options on logger1. If it does not exist, it will be created.
+JL("logger1").setOptions({ "level": JL.getDebugLevel() }); 
+
+// Set other options on logger2. This does not affect logger1.
+JL("logger2").setOptions({ "level": JL.getErrorLevel() }); 
+</pre>
+
+<p>
+    In applications with dozens of loggers, setting options for each one individually can get boring.
+    Because of this, JSNLog uses the same
+    inheritance mechanism as Log4J and Log4Net. Here is how this works:
+</p>
+<ol>
+    <li>
+        Logger names can have multiple parts separated by periods, such as &quot;abc.def&quot; and &quot;abc.def.ghi&quot;.
+    </li>
+    <li>
+        If the parts of a logger match the first parts of another logger, than the first logger is called the parent of the other logger. For example:
+        <ul>
+            <li>
+                The parent of logger &quot;abc.def.ghi&quot; is logger &quot;abc.def&quot;.
+            </li>
+            <li>
+                The parent of logger &quot;abc.def&quot; is logger &quot;abc&quot;.
+            </li>
+            <li>
+                The parent of logger &quot;abc&quot; is the root logger.
+            </li>
+        </ul>
+    </li>
+</ol>
+<p>
+    Loggers inherit their options from their ancestors. So if you set options on logger &quot;abc&quot;, then &quot;abc.def&quot;, &quot;abc.def.ghi&quot; 
+    and all other descendents of
+    &quot;abc&quot; get the same options, unless you specifically override them.
+</p>
+<p>
+The root logger is the only logger without a name. As you saw in the beginning of this article, you access it by simply leaving out the name:
+</p>
+<pre>
+    // Set options on root logger
+    <b>JL()</b>.setOptions({ "level": JL.getErrorLevel() }); 
+</pre>
+
+<p>
+    Now that you've seen how to filter messages by severity and how to use multiple loggers,
+    let's have a look at the other options.
+</p>
+
+<h3>Filter by regular expression</h3>
+<p>
+    
+    Sometimes it's just not worth the time to fix some rare exception.
+     Or there is a third party component throwing exceptions and there is nothing you can do about it.
+</p>
+<p>
+    The <i>disallow</i> option suppresses all messages that match a given 
+    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions">regular expression</a>. If you're logging an object,
+    it will be converted to JSON and then matched:
+</p>
+
+<pre>// Suppress messages that match regular expression [Ss]uppress\s+me
+JL().setOptions({ "disallow": "[Ss]uppress\\s+me" });</pre>
+
+
+<h3>Filter by browser type</h3>
+
+<p>
+    Imagine trying to solve a bug that only happens with everybody's favorite browsers, IE 7 and 8.
+    You want to switch on the logger, but only for those browsers.
+</p>
+<p>
+The <i>userAgentRegex</i> option is your friend here. It disables the logger, except if the client's 
+    <a href="http://www.useragentstring.com/pages/useragentstring.php">user agent string</a>     
+        matches a given 
+    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions">regular expression</a>:
+       </p>
+
+<pre>// Disable logger, except for IE 7 and IE 8
+JL().setOptions({ "userAgentRegex": "MSIE 7|MSIE 8" });</pre>
+
+
+<h3>Filter out (near) duplicates</h3>
+
+<p>
+    Imagine having a loop that executes 50 times, and somewhere in that loop
+    a logger decides to send a message. You would get the same message 50 times, like this. Ouch!
+</p>
+<pre>
+Something is wrong - x = 1
+Something is wrong - x = 2
+Something is wrong - x = 3
+...
+Something is wrong - x = 49
+Something is wrong - x = 50
+</pre>
+
+<p>
+    The <i>onceOnly</i> option will get rid of the near duplicates for you. It takes one or more 
+    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions">regular expressions</a>.
+    When it sees a message that matches one of those, it remembers that it has seen a message matching that particular regular expression. If it gets another message
+    matching that regular expression, it will suppress it.
+</p>
+
+<pre>// Send only one message that matches regular expression &quot;Something is wrong - x =&quot;
+JL().setOptions({ "onceOnly": [ "Something is wrong - x =" ] });</pre>
+
+<p>
+    With the <i>onceOnly</i> option in place, you get only the first message:
+</p>
+
+<pre>
+Something is wrong - x = 1
+</pre>
+
+<h3>Limit number of messages</h3>
+<p>
+    You can set the <i>maxMessages</i> option to 
+    limit the total number of messages sent by the client.
+    This is a blunt instrument, because it stops sending messages after the limit is reached,
+    regardless of which loggers are trying to send or the severity of the messages.
+</p>
+<pre>
+// Ensure that the client sends no more than 3 log messages
+JL.setOptions({ "maxMessages": 3 });</pre>
+
+<p>
+    Note that it says &quot;JL.setOptions(...)&quot;, not &quot;JL<b>()</b>.setOptions(...)&quot;. 
+    That's because this option applies to the entire JSNLog library, not to an individual logger. 
+</p>
+
+<h3>Only send debug messages if an exception happens</h3>
+
+<p>
+    When an exception happens, it is not always clear why it happened. So you may need to generate debug messages
+    in several places
+    to find the cause:
+</p>
+
+<pre>window.onerror = function myErrorHandler(errorMsg, url, lineNumber) {
+    JL().fatal("Exception - " + errorMsg + ", url: " + url + ", line number: " + lineNumber);
+    return false;
+}
+
+function abc(x) {
+    JL().debug("abc: x=" + x);
+    ...
+}
+
+function def(y) {
+    JL().debug("def: y=" + y);
+    ...
+}</pre>
+
+<p>
+    The issue is that you want the debug information, but only if there is an exception. If there is no exception, the debug information is 
+    of no value.
+</p>
+
+<p>
+    To solve this, you can store the debug messages in memory, and only send them to the server if there
+    is a fatal message. Because this may involve multiple named loggers, this is configured on
+    the <a href="#howitworks">AJAX appender</a> - the JSNLog component that receives messages from the loggers and sends them to the server.
+</p>
+
+<p>
+    The following code will make this all work. For details, see the <a href="http://js.jsnlog.com/">JSNLog documentation</a>.
+</p>
+<pre>// Create new appender
+var appender = JL.createAjaxAppender("new appender");<br />
+// Tell the root logger to send all messages to the new appender
+JL().setOptions({
+    "appenders": [appender]
+});<br />
+// Configure the new appender
+appender.setOptions({
+    "storeInBufferLevel": JL.getDebugLevel(),
+    "level": JL.getErrorLevel(),
+    "sendWithBufferLevel": JL.getFatalLevel(),
+    "bufferSize": 20
+});
+</pre>
+
+<p>
+    What's the result of this magic?
+</p>
+<ol>
+    <li>
+        A new appender is created.
+    </li>
+    <li>
+        The root logger is told to send all its messages to the new appender. Because the root logger is the ancestor of all loggers,
+        any other loggers you have will now also send their messages to the new appender.
+    </li>
+
+    <li>
+        When the appender receives from a logger a message with severity <i>debug</i> or higher, it is stored in a memory buffer.
+    </li>
+    <li>
+        When it receives a message with severity <i>error</i> or higher, it is not buffered but sent to the server. Everything else in the buffer stays in the buffer though.
+    </li>
+    <li>
+        When it receives a message with severity <i>fatal</i>, it is sent to the server along with all messages in the buffer.
+</li>
+    <li>
+        The buffer holds no more than 20 messages. If another message needs to be stored, the oldest message in the buffer is removed.
+    </li>
+</ol>
+<p>
+This way, you can generate as much debug data as you want without worrying about being swamped, 
+    because it will only be sent when you actually need it. 
+</p>
+
+
+
+<a id="serverconfiguration"></a>
+<h2>Receiving log messages on the server</h2>
+
+<p>
+    As you saw, the AJAX Appender built into the jsnlog.js JavaScript library sends log messages to the server.
+    The <a href="http://js.jsnlog.com/Documentation/DownloadInstall">message format</a>
+    is well defined, making it easy to write code to receive the log messages on the server and store them in a server log.
+    There already is open source code
+for     
+    <a href="http://jsnlog.com/phpjs">PHP</a>
+     and 
+    <a href="http://jsnlog.com/">.Net</a>
+that does this for you.
+</p>
+
+<a id="serverconfiguration"></a>
+<h2>Configuring loggers on the server</h2>
+
+
+<p>
+    The version of for .Net takes this one step further and also 
+    lets you do all configuration in the web.config file on your server. That way, there is no need to touch your JavaScript sources.
+</p>
+
+<p>
+    For example, to set logger &quot;abc.def&quot; so it only sends messages with severity <i>error</i> or higher:
+</p>
+<pre>&lt;configuration&gt; 
+    &lt;jsnlog&gt;
+        &lt;logger name="abc.def" level="ERROR" /&gt;
+    &lt;/jsnlog&gt;
+&lt;/configuration&gt;</pre>
+
+<p>
+    You'll find the complete details in the <a href="http://jsnlog.com/Documentation/WebConfig">JSNLog documentation for web.config</a>.
+</p>
+
+<h2>Correlating all messages related to a request</h2>
+<p>
+    In a complicated application, you may get several log messages for a single request, some generated on the server, some generated on the client.
+    You will want to tag each log message with a request id. That way, you can sort your log by request id and time stamp to get a unified picture of what happened
+    for each request, first on the server and later on the client.
+</p>
+
+<p>
+    <a href="http://jsnlog.com/">JSNLog for .Net</a>
+    provides a method
+    <a href="http://jsnlog.com/Documentation/JavascriptLogging/RequestId">RequestId</a>
+    which returns a unique string identifying the current request. 
+    You can make this the same request id used by Windows internally for its logging.
+</p>
+<p>
+    A second method 
+    <a href="http://jsnlog.com/Documentation/JavascriptLogging/Configure">Configure</a>,
+    lets you ensure that each log message generated on the client contains that request id.
+</p>
+<p>
+    This way, you can include the request id in all your log messages, whether generated on the server or on the client.
+</p>
+
+<h2>Advanced options</h2>
+<p>
+    JSNLog supports more advanced options that are beyond the scope of this article.
+    These include batching of multiple log messages in one request to improve efficiencies, and filtering by client IP address.
+</p>
+
+
+<h2>Conclusion</h2>
+
+<p>
+    Once your JavaScript has gone live, it is prone to unexpected events, such as exceptions, failed AJAX requests and AJAX requests that take too long.
+    To find out about these issues so you can fix them quickly, you need to log them to your server log.
+</p>
+<p>
+    JSNLog is a relatively new client side logging package. Heavily optimized for life on the client,
+    it sends log messages to the server and includes many options to reduce the volume of log messages. 
+</p>
+
+
+
+

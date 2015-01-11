@@ -1,0 +1,138 @@
+﻿Include JavaScript exceptions in your server side logs with JSNLog
+
+
+JSNLog lets you insert loggers in your client side JavaScript, configure them in your web.config, and store their messages in your server side logs.
+
+
+<h2>Introduction</h2>
+<p>
+    <a href="http://jsnlog.com">JSNLog</a> is a logging package, similar to Log4Net, NLog, Elmah, etc.
+    However, instead of server side events (in your C# or VB code), it logs events that happen in your JavaScript. 
+    NuGet installation: 
+    </p>
+<p>
+    <pre>Install-Package JSNLog</pre>
+</p>
+
+<p>
+    It has 2 components:
+</p>
+<ul>
+    <li>
+        The <b>client side component</b> jsnlog.js has logging methods, so your JavaScript code can log events.
+    It sends these to the server using AJAX. 
+    </li>
+    <li>
+       The <b>server side component</b> receives the log messages from the client.
+        It then passes them on to your
+    server side logging package, to store in your server side log.
+    </li>
+</ul>    
+<p>
+    JSNLog assumes you already have installed server side logging. It simply passes its log messages on to your 
+    server side logging package, so client side log message will go to the same logs as your server side log messages. 
+    It will interface    
+    with Log4Net, NLog, Elmah and 
+    Common.Logging.  
+</p>
+
+
+<h2>Why and how</h2>
+
+<h3>
+    Your web site consists of C#/VB code running on the server, and JavaScript running on the browser.
+</h3>
+<img src="jsnlog-candjs.png" />
+
+<h3>
+    When an exception happens in your C#/VB code, you log it, so you can fix the bug.
+</h3>
+<p>
+    Using your server side logging package, such as Log4Net, NLog or Elmah, with loggers configured via web.config. 
+</p>
+
+<pre>try
+{
+    ....
+}
+catch (Exception e)
+{
+    ILog log = LogManager.GetLogger("serverlogger");
+    log.Fatal(e.ToString());
+}</pre>
+
+<img src="jsnlog-logc.png" />
+
+<h3>
+But what about exceptions in your JavaScript code?
+</h3>
+<pre>try
+{
+    ....
+}
+catch(err)
+{
+    ????
+}
+</pre>
+<img src="jsnlog-logjs.png" />
+
+<h3>
+Log the exception on the client with JSNLog, which sends it to the server.
+</h3>
+<p>
+     JSNLog will pass the log message on to your server side logging package, 
+    so it winds up in your server side logs. Configure your client side loggers in web.config.
+    </p>
+<pre>try
+{
+    ....
+}
+catch(err)
+{
+    JL("jsLogger").fatal(err.message);
+}
+</pre>
+<img src="jsnlog-solution.png" />
+
+
+<h2>Benefits</h2>
+
+
+<ul>
+    <li>
+        Extensive <a href="http://jsnlog.com">documentation</a>. Easy to install.
+    </li>
+    <li>
+        No need to pay fees to a third party logging service.
+    </li>
+    <li>
+Client side log messages go into the same logs as your server side log messages.
+    </li>
+    <li>
+        Find out which log messages were generated as part of the same web request through request ids.
+    </li>
+    <li>
+        Configure client side loggers in your web.config.
+    </li>
+    <li>
+        Send log messages in batches of 2 or more for greater efficiency.
+    </li>
+    <li>
+        Enable logging only for browsers that give you problems, such as IE 8.
+    </li>
+<li>
+    Generate trace messages that are useful for fixing exceptions, but store them in a buffer 
+    on the client. Only send them when there is an actual exception. Get all the info you need, but only when you need it.
+</li>
+</ul>
+
+<p>
+    Documentation and installation instruction are on the 
+    <a href="http://jsnlog.com">JSNLog website</a>. You can install JSNLog via NuGet:
+</p>
+<p>
+    <pre>Install-Package JSNLog</pre>
+</p>
+
+

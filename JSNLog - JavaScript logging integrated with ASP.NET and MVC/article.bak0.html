@@ -1,0 +1,633 @@
+
+<ul class="download">
+<li><a href="#installation">Install JSNLog (recommended)</a></li>
+<li><a href="https://github.com/mperdeck/jsnlog" target="_blank">Source files and sample code</a></li>
+</ul>
+
+
+
+
+<h2>Introduction</h2>
+<p>
+JSNLog makes it easy to catch and investigate errors in your client side JavaScript.
+</p>
+<p>
+You probably use a server side logging package
+(<a href="http://nlog-project.org/" target="_blank">NLog</a>,
+<a href="http://logging.apache.org/log4net/" target="_blank">Log4Net</a>, etc.)
+to log exceptions in your C# or Visual Basic code, 
+and to find out what's going on inside your code.
+You'll probably configure your loggers in your web.config or via a configuration file - setting logger levels, 
+determining where log messages get stored, etc.
+</p>
+
+
+
+
+
+
+
+
+<p>
+With more and more functionality running in the browser instead of the server,
+we need the same logging goodness in our JavaScript code.
+However,
+traditionally, logging packages for JavaScript
+haven't allowed you to configure the JavaScript loggers from your web.config.
+And you had to write code to capture their logging output and store it on the server.
+</p>
+
+
+
+
+<p>
+JSNLog (JavaScript .Net Logging) changes all this:
+</p><ul>
+<li>
+Insert loggers in your JavaScript.
+</li>
+<li>
+Log any object, not just strings.
+</li>
+<li>
+Configure your JavaScript loggers in your web.config.
+</li>
+<li>
+Capture the output from your JavaScript loggers on your server, and pass it on to your server side logging package
+for storage - without writing code.
+</li>
+<li>
+Batch log messages, to reduce the number of requests being sent to your server.
+</li>
+</ul>
+<p>If you like this article, please <a href="#bodyend">vote for it</a>. </p>
+
+
+
+
+<h2>Contents of this series</h2>
+
+
+
+
+<ul>
+<li><a href="#installation">Installation</a></li>
+<li><a href="#shortstory">Getting Started - short version</a></li>
+<li><a href="#longstory">Getting Started - detailed version</a></li>
+<li><a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#clientside">Inserting loggers in your JavaScript</a></li>
+<li><a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#configuration">Configuring your loggers in web.config</a></li>
+</ul>
+
+
+
+
+
+
+
+
+<h2><a name="installation"></a>Installation</h2>
+
+
+
+
+<p>These instructions assume that you use:
+</p><ul>
+<li>.Net 4.0 or higher</li>
+<li>Visual Studio 2010 or higher</li>
+<li>IIS 7.0 or higher</li>
+</ul>
+<p>
+To install JSNLog:
+</p>
+
+
+
+
+<ol>
+<li>
+Load your solution or project in Visual Studio, 
+and open the Package Manager Console: <em>Tools</em> | <em>Library Package Manager</em> | <em>Package Manager Console</em>.
+</li>
+<li>
+Enter the following at the PM&gt; prompt to install JSNLog:
+<pre>Install-Package JSNLog
+</pre>
+</li>
+<li>
+Install the Common.Logging adapter for your server side logging package (Log4Net, NLog, Enterprise Library, etc.)
+<ol style="list-style-type: lower-roman;">
+<li>
+<a href="http://nuget.org/packages?q=common.logging" target="_blank">Click here</a>
+to find adapters on Nuget (Common.Logging.Log4Net, Common.Logging.NLog 2.0.0, etc.) 
+</li>
+<li>
+Click the one you need. A page will open with its
+Intall-Package command.
+</li>
+<li>
+Enter that command at the PM&gt; prompt in Visual Studio.
+</li>
+</ol>
+</li>
+
+
+
+
+<li>
+Configure the adapter in your web.config. Click the link below for the server side logging package you use:
+<ul>
+<li><a href="http://netcommon.sourceforge.net/docs/2.1.0/reference/html/ch01.html#logging-adapters-log4net" target="_blank">Log4Net</a></li>
+<li><a href="http://netcommon.sourceforge.net/docs/2.1.0/reference/html/ch01.html#logging-adapters-nlog" target="_blank">NLog</a></li>
+<li><a href="http://netcommon.sourceforge.net/docs/2.1.0/reference/html/ch01.html#d4e271" target="_blank">Enterprise Library</a></li>
+<li><a href="http://www.dotblogs.com.tw/wadehuang36/archive/2011/10/06/Common-Logging-Elmah.aspx" target="_blank">Elmah</a></li>
+</ul>
+<p>
+The 
+<a href="https://github.com/mperdeck/jsnlog" target="_blank">sample code</a> has a working example of a configuration for Log4Net.
+</p>
+</li>
+
+
+
+
+<li>
+Call JSNLog's Configure method in your pages, before any script tags that load JavaScript
+that use JSNLog loggers.
+<ul>
+<li>
+In a razor file (normally used with MVC3 and up), use:
+<pre>@Html.Raw(JSNLog.JavascriptLogging.Configure())
+</pre>
+</li>
+<li>
+In an .asxp file, use:
+<pre>&lt;%= JSNLog.JavascriptLogging.Configure() %&gt;
+</pre>
+</li>
+</ul>
+</li>
+
+
+
+
+</ol>
+
+
+
+
+<h2><a name="shortstory"></a>Getting Started - short version</h2>
+
+
+
+
+<p>
+After installation, the default configuration in your web.config
+is enough to get you logging messages from JavaScript. All you need to do is add loggers to your JavaScript code.
+Here is how:
+</p>
+
+
+
+
+<ol>
+<li>
+To log a message, insert a line like this:
+<pre>jsnlog.getLogger(&quot;mylogger&quot;).info(&quot;Something happened&quot;);
+</pre>
+</li>
+
+
+
+
+<li>
+This creates a logger <em>mylogger</em> (if it doesn't already exist) and
+tells it to log the message <em>Something happened</em> with severity INFO.
+You can make up any logger name you want. No need to declare loggers before use.
+</li>
+
+
+
+
+<li>
+Instead of a simple string, you could log an entire object. JSNLog will create a log message with all the values in your object.
+<pre>var myValidator = new Validator(); 
+jsnlog.getLogger(&quot;mylogger&quot;).info(myValidator);
+</pre>
+</li>
+
+
+
+
+<li>
+You can choose any of these severities: TRACE, DEBUG, INFO, WARN, ERROR and FATAL
+(<a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#js-trace">how</a>).
+</li>
+
+
+
+
+<li>
+In addition to simple messages, you can 
+<a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#js-time">send timing information</a>
+ and check the correctness of your code with 
+ <a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#js-assertEqual">assertEqual</a>.
+And you can 
+<a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#configuration">configure your loggers</a> in your web.config, for example to 
+<a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#config-level">only allow</a> FATAL messages and ignore everything else.
+Or to <a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#config-batchSize">batch messages</a> to reduce bandwidth and load on your server.
+</li>
+</ol>
+
+
+
+
+<p>
+Want to know more?
+Continue on to the detailed version.
+</p>
+
+
+
+
+<h2><a name="longstory"></a>Getting Started - detailed version</h2>
+<p>
+<a href="#shortstory">Be sure to first read the short version</a>. Then get back here for the details.
+</p>
+
+
+
+
+<p>
+JSNLog works along the same lines as Log4Net or Log4J - everything revolves around
+<a href="#long-loggers">loggers</a> and <a href="#long-appenders">appenders</a>.
+</p>
+
+
+
+
+<p>
+First we'll look at the loggers, and then the appenders.
+Then if you want to know more, 
+read up on
+all the
+<a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#clientside">methods you can use in your JavaScript</a>
+and
+the
+<a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#configuration">Web.config elements</a>
+you can use to configure your loggers.
+</p>
+
+
+
+
+<a name="long-loggers"></a><h3>Loggers</h3>
+<p>
+<a href="#shortstory">As you saw</a>,
+to log a message, you first get a logger and then tell it to log the message:
+</p>
+<pre>jsnlog.getLogger(&quot;mylogger&quot;).info(&quot;Something happened&quot;);
+</pre>
+
+
+
+
+<h4>Severity</h4>
+
+
+
+
+<p>
+You will want to give each message a severity - to distinguish between humble TRACE messages and red hot urgent FATAL messages.
+For each message, you can choose one of these severities: 
+</p>
+<table border="1" cellpadding="4" cellspacing="0">
+<tbody><tr><td>Severity   </td><td>Sample JavaScript code</td></tr>
+<tr><td>TRACE</td><td>jsnlog.getLogger(&quot;mylogger&quot;).<a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#js-trace">trace</a>(&quot;Something happened&quot;);</td></tr>
+<tr><td>DEBUG</td><td>jsnlog.getLogger(&quot;mylogger&quot;).<a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#js-debug">debug</a>(&quot;Something happened&quot;);</td></tr>
+<tr><td>INFO</td><td>jsnlog.getLogger(&quot;mylogger&quot;).<a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#js-info">info</a>(&quot;Something happened&quot;);</td></tr>
+<tr><td>WARN</td><td>jsnlog.getLogger(&quot;mylogger&quot;).<a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#js-warn">warn</a>(&quot;Something happened&quot;);</td></tr>
+<tr><td>ERROR</td><td>jsnlog.getLogger(&quot;mylogger&quot;).<a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#js-error">error</a>(&quot;Something happened&quot;);</td></tr>
+<tr><td>FATAL</td><td>jsnlog.getLogger(&quot;mylogger&quot;).<a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#js-fatal">fatal</a>(&quot;Something happened&quot;);</td></tr>
+</tbody></table>
+<p>
+As you'd expect, FATAL is more severe than ERROR, ERROR more severe than WARN, etc.
+</p>
+
+
+
+
+<h4>Levels</h4>
+
+
+
+
+<p>
+You may decide that in production, you're normally only interested in FATAL messages, while in development
+you want to receive everything with severity DEBUG and higher, and maybe some selected TRACE messages. To
+make this work, you can tell each logger to filter messages by setting its level in your web.config, like so: 
+</p>
+
+
+
+
+<pre>&lt;jsnlog ... &gt;
+   &lt;logger name=&quot;mylogger&quot;&gt;
+      &lt;level value=&quot;ERROR&quot;&gt;
+   &lt;/logger&gt;
+&lt;/jsnlog&gt;
+</pre>
+
+
+
+
+<p>
+This tells logger <em>mylogger</em> to only log messages with severity ERROR or higher, and to ignore all other messages
+(<a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#config-level">details</a>).
+</p>
+
+
+
+
+<a name="long-logger-inheritance"></a><h4>Inheritance</h4>
+
+
+
+
+<p>
+However, depending on the size of your JavaScript code, you might be logging messages in dozens or even hundreds of places -
+TRACE messages at the beginning of functions, FATAL messages in exception handlers, etc.
+And you'll want to give each logger a unique name, so you can configure each logger individually.
+However, setting levels for hundreds of loggers in your web.config wouldn't be much fun.
+</p>
+<p>
+The solution is that you can organise loggers in a hierarchy based on their name, using a dot notation. For example:
+</p>
+<ul>
+<li>
+The parent of logger <em>Validators.IsNumeric.exceptionHandler</em> is logger <em>Validators.IsNumeric</em>
+</li>
+<li>
+The parent of logger <em>Validators.IsNumeric</em> is logger <em>Validators</em>
+</li>
+<li>
+The parent of logger <em>Validators</em> is the system defined root logger.
+</li>
+</ul>
+
+
+
+
+<p>
+Unless you set a logger's level in your web.config, it inherits its level from its parent. This way, if you set the level of
+<em>Validators</em> to ERROR, all its decendents get the same level - <em>Validators.IsNumeric</em>, <em>Validators.IsRequired</em>,
+<em>Validators.IsNumeric.exceptionHandler</em>, etc.
+</p>
+
+
+
+
+<p>
+In case you're worried about having loggers floating around that you're not even using, don't. A logger only takes up space
+if you actually use it.
+</p>
+
+
+
+
+<p>
+The default level of the root logger is DEBUG. So by default, TRACE messages do not get logged, but messages
+of severity DEBUG and higher do get logged. This means that if you want to give all your loggers
+the level FATAL (to stop all non-FATAL messages from being logged), you only need to 
+<a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#config-level">set the level</a> of the root logger: 
+</p>
+
+
+
+
+<pre>&lt;root&gt;
+   &lt;level value=&quot;FATAL&quot;&gt;
+&lt;/root&gt;
+</pre>
+
+
+
+
+<p>
+(This won't change the level of loggers whose level you set explicitly.)
+</p>
+
+
+
+
+<p>
+If you have many loggers, it makes sense to adopt a naming scheme, such as 
+<a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#recommendednaming">this one</a>.
+</p>
+
+
+
+
+<a name="long-appenders"></a><h3>Appenders</h3>
+<p>
+Loggers do not send messages to the server themselves. Instead, they send their messages to an appender, which in turn
+sends them to the server. In a moment, we'll see 
+<a href="#long-appenders-associatewithlogger">how to associate an appender with a logger</a>.
+</p>
+<p>
+When messages are received on the server, they are processed by JSNLog.dll, the server side bit of JSNLog. This 
+hands the messages to a third party package, Common.Logging. This in turn uses the adapter you installed during installation
+to pass the messages on to your favorite 
+server side logging package, such as Log4Net, NLog, etc.
+</p>
+<img src="messageflow.png" />
+<p>
+You can 
+<a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#config-appender">configure appenders</a> in your web.config, for example
+ to 
+batch messages:
+</p>
+<pre>&lt;appender name=&quot;appender1&quot;&gt;
+   &lt;batchSize value=&quot;2&quot;&gt;
+&lt;/appender&gt;
+</pre>
+
+
+
+
+<a name="long-appenders-associatewithlogger"></a><h4>Associating appenders with loggers</h4>
+<p>
+You can associate an appender with a logger in your web.config:
+</p>
+<pre>&lt;appender name=&quot;appender1&quot;&gt;
+   ...
+&lt;/appender&gt;
+
+&lt;logger name=&quot;mylogger&quot;&gt;
+   <strong>&lt;appender-ref ref=&quot;appender1&quot;&gt;</strong>
+&lt;/logger&gt;
+</pre>
+
+
+
+
+<p>
+However, you wouldn't want to have to associate all your loggers with an appender this way.
+This is solved in the 
+<a href="#long-logger-inheritance">same way</a> as was done for logger levels - through inheritance.
+</p>
+<p>
+A logger inherits the appender that its parent is associated with. If a logger doesn't have a parent, it inherits 
+the appender from the root logger. 
+</p>
+<p>
+Note that this means that if you associate an appender with a logger in your web.config
+and that logger's parent also had an appender, than your logger now has two appenders!
+As a result, each time the logger sends a message, it will be sent twice over the Internet, once by each appender.
+You can prevent this by using the 
+<a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#config-logger-additivity">additivity</a> attribute to tell a logger not to inherit appenders from its parent:
+</p>
+<pre>&lt;appender name=&quot;appender1&quot;&gt;
+   ...
+&lt;/appender&gt;
+
+&lt;logger name=&quot;mylogger&quot; <strong>additivity=&quot;false&quot;</strong>&gt;
+   &lt;appender-ref ref=&quot;appender1&quot;&gt;
+&lt;/logger&gt;
+</pre>
+
+
+
+
+<a name="long-appenders-associatewithrootlogger"></a><h4>Associating an appender with the root logger</h4>
+<p>
+In the same way you can associate an appender with a logger,
+you can 
+<a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#config-appender-ref">associate an appender with the root logger</a> in your web.config. 
+It will then be used by all your loggers
+(unless you use the 
+<a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#config-logger-additivity">additivity</a> attribute).
+</p>
+<p>
+However, you don't have to. 
+If you do not associate an appender with the root logger,
+JSNLog will create a default appender behind the scenes and associate that with the root logger for you.
+That way, you can start logging without having to configure things in your web.config.
+</p>
+
+
+
+
+<p>
+One reason to explicitly associate an appender with the root logger in your web.config is 
+if you want all log messages to be batched. This can reduce the load on your server.
+For example, by using a batch size of 2, you cut the number of logging requests to your server in 2, because
+each request now carries 2 log messages instead of just one:
+</p>
+
+
+
+
+<pre>&lt;appender name=&quot;appender1&quot;&gt;
+   <strong>&lt;batchSize value=&quot;2&quot;&gt;</strong>
+&lt;/appender&gt;
+
+&lt;root&gt;
+   &lt;appender-ref ref=&quot;appender1&quot;&gt;
+&lt;/root&gt;
+</pre>
+
+
+
+
+<h4>Appenders have levels too</h4>
+<p>
+Like loggers, appenders have a level. If a logger sends a message to an appender with a severity lower than the appender's level,
+the appender won't process it. So for a message to get logged, its severity must be higher than the level of both the logger and the appender. 
+</p>
+<p>
+You can 
+<a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#config-level">set the level of an appender</a> in your web.config:
+</p>
+<pre>&lt;appender name=&quot;appender1&quot;&gt;
+   &lt;level value=&quot;ERROR&quot;&gt;
+&lt;/appender&gt;
+</pre>
+
+
+
+
+<p>
+If you do not specify an appender's level, it has level TRACE. Because that is the lowest severity, 
+this means it will process all messages it gets from a logger. 
+</p>
+
+
+
+
+<a name="long-logger-multipleappenders"></a><h4>Multiple appenders</h4>
+<p>
+You saw earlier how
+<a href="#long-appenders-associatewithlogger">loggers can have multiple appenders</a>. This means that when the logger sends a message,
+it is logged multiple times, once for each appender. How could this ever be useful?
+</p>
+
+
+
+
+<p>
+Suppose you 
+<a href="#long-appenders-associatewithrootlogger">batch your log messages</a>. This means log messages will be held on the client
+until there are enough to make up a batch. That's great for TRACE messages. However, you may not want to hold up
+FATAL messages this way.
+</p>
+
+
+
+
+<p>
+The solution is to configure the root logger, so all loggers send their messages to two appenders:
+</p>
+<ul>
+<li>
+One appender that batches log messages, and that accepts all messages.
+</li>
+<li>
+And a second appender that does not batch messages, but that accepts only FATAL messages.
+</li>
+</ul>
+<p>
+This way, only FATAL messages get logged twice. And you are sure that FATAL messages get sent right away by the second appender.
+</p>
+<p>
+It would look like this in your web.config:
+</p>
+<pre>&lt;appender name=&quot;Standard Appender&quot;&gt;
+   <strong>&lt;batchSize value=&quot;2&quot;&gt;</strong>
+&lt;/appender&gt;
+
+&lt;appender name=&quot;High Priority Appender&quot;&gt;
+   &lt;level value=&quot;FATAL&quot;&gt;
+&lt;/appender&gt;
+
+&lt;root&gt;
+   &lt;appender-ref ref=&quot;Standard Appender&quot;&gt;
+   &lt;appender-ref ref=&quot;High Priority Appender&quot;&gt;
+&lt;/root&gt;
+</pre>
+
+
+
+
+<a name="bodyend"></a>
+
+
+
+
+<h2>Next part</h2>
+<p>
+In this part 1 about JSNLog, you saw how to install JSNLog and how to get started using it.
+The 
+<a href="http://www.codeproject.com/Articles/500421/Inserting-loggers-in-your-JavaScript-with-JSNLog#clientside">next part</a>,
+will show in detail all JavaScript functions provided by JSNLog.
+</p>
+

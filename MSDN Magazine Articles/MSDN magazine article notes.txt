@@ -1,0 +1,18 @@
+
+
+
+
+ubmissions email is mmsubmit@microsoft.com. Make the Subject Line of the email "MSDN Article Query". As part of that email, we'll need the following information:
+
+A tentative title for your proposed article.
+A concise and informative blurb (2-3 sentences) for your article. Write this as if the text would appear beneath a linked Web headline.
+A brief description of your topic, not longer than half a page.
+Two or three takeaways that developers will get after reading your piece (one sentence each).
+
+
+The intended scope of your coverage (for example, Web applications, application architecture, database programming, mobile applications, security, etc.)
+The programming languages for your code samples, if code will be included in your article (C#, VB.NET, F#, C++, IronPython, etc.)
+Technologies discussed (ADO.NET, Parallel Extensions, Silverlight, Windows, DirectX, etc.), together with their versions.
+A bio. Bios are normally two to four sentences long. Emphasize your work with the subject matter about which you're writing. Note that it's OK to include a reference to your blog or website.
+A list of published articles, if any.
+Whether you've previously published or have granted rights to this proposal to another publisher, whether in print or on the Web.

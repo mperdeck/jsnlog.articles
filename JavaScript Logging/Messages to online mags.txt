@@ -1,0 +1,70 @@
+
+I would be grateful if you considered my attached article for publication in Smashing Magazine.
+
+==================================
+
+I have written an article about client side event logging:
+* Why this is a good idea, and what you need to log;
+* Introducing JSNLog, a new JavaScript library that makes it easy;
+* An overview of the nifty features and secret sauce that makes JSNLog perfect for client side logging.
+
+I would be grateful if you considered my article for publication in Smashing Magazine.
+
+
+
+I am a JavaScript developer and proud father of JSNLog. 
+I wrote it after concluding that other client side logging solutions didn't have good enough options to filter out only useful log data, to cut down the otherwise sheer volume of incoming raw data. 
+
+=========================
+
+I have written an article about client side event logging:
+* Why this is a good idea, and what you need to log;
+* Introducing JSNLog, a new JavaScript library that makes it easy;
+* An overview of the nifty features and secret sauce that make JSNLog perfect for client side logging.
+
+Being the proud father of JSNLog, I would be grateful if you published my article in Smashing Magazine.
+
+==================================
+
+iris.ljesnjanin@smashingmagazine.com
+
+Article submission - Logging client side events
+
+Hello Iris,
+
+I would be grateful if you considered my attached article for publication in Smashing Magazine.
+
+It covers:
+
+* Why is client side logging a good idea, and the types of events you need to log;
+
+* Introducing JSNLog, a little known JavaScript logging library that improves upon similar libraries in 2 ways:
+  - Much better options to filter log data on the client, to reduce bandwidth and load on the server;
+  - Integration with server side logs and the use of request ids, to make it easy to select all log data for a given request, whether generated on the server or the client;
+  - Short, jQuery style functions;
+  - Compact download size at 1.5kb.
+  
+I am a JavaScript developer and proud father of JSNLog. I created JSNLog out of frustration with the limitation of existing JavaScript logging libraries. JSNLog is now at version 2.4. It is stable and open source.
+
+My other work:
+
+Author of the book "ASP.NET Site Performance Secrets", available at amazon:
+http://www.amazon.com/ASP-NET-Site-Performance-Secrets-Perdeck/dp/1849690685/ref=sr_1_1?ie=UTF8&qid=1392725280&sr=8-1
+
+Numerous articles on various topics:
+http://www.codeproject.com/script/Articles/MemberArticles.aspx?amid=4332264
+http://mattperdeck.com/
+
+If you require any changes to my article, I would be happy to make them.
+
+Thanks in advance for your consideration,
+
+Matt Perdeck
+
+
+
+
+
+
+
+

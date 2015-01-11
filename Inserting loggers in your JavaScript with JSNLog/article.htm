@@ -1,0 +1,1521 @@
+﻿
+<ul class="download">
+    <li><a href="http://www.nuget.org/packages/JSNLog/">Install JSNLog with Nuget (recommended)</a></li>
+    <li><a href="https://github.com/mperdeck/jsnlog" target="_blank">Source files and sample code</a></li>
+</ul>
+
+
+
+
+<p>
+    Shows how to insert loggers in your JavaScript with
+    <a href="http://www.jsnlog.com">JSNLog</a>, a JavaScript logging library that is well integrated with .Net.
+    It lets you configure loggers in your web.config.
+    And it lets you receive log messages from the client and store them on the server, without any coding.
+</p>
+
+
+
+
+<h2>Contents of this series</h2>
+
+
+
+
+<ul>
+    <li><a href="http://www.codeproject.com/Articles/500429/JSNLog-JavaScript-logging-integrated-with-ASP-NET">Why and how of JavaScript logging</a></li>
+    <li><strong>Inserting loggers in your JavaScript</strong></li>
+    <li><a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#configuration">Configuring your loggers in web.config</a></li>
+</ul>
+
+<h2>Contents of this article</h2>
+
+
+
+<p>
+    <b>JL Namespace</b>
+</p>
+    <ul>
+        <li><a href="#jl">JL Method</a> - creates loggers</li>
+        <li><a href="#jlsetoptions">setOptions Method</a> - configures the JSNLog library</li>
+    </ul>
+
+<p>
+    <b>Logger Object</b>
+</p>
+    <ul>
+        <li><a href="#trace">trace Method</a></li>
+        <li><a href="#debug">debug Method</a></li>
+        <li><a href="#info">info Method</a></li>
+        <li><a href="#warn">warn Method</a></li>
+        <li><a href="#error">error Method</a></li>
+        <li><a href="#fatal">fatal Method</a></li>
+        <li><a href="#fatalexception">fatalException Method</a></li>
+        <li><a href="#loggersetoptions">setOptions Method</a></li>
+        <li><a href="#log">log Method</a></li>
+    </ul>
+<p>
+    <a href="#exceptionobject">Exception Object</a>
+</p>
+
+
+    <h2>JL Namespace</h2>
+<p>
+    Lets you create loggers and configure the JSNLog library itself.
+</p>
+
+
+<h3><a name="jl"></a>JL Method</h3>
+<p>
+    Creates and retrieves loggers
+</p>
+
+
+
+
+    <a name="Definition"></a><h4>Definition</h4>
+
+<pre>JL(loggerName?: string): Logger</pre>
+
+    
+        <h5>Parameters</h5>
+
+        <dl>
+            <dt>loggerName</dt>
+            <dd>Name of the logger, or empty for the root logger.</dd>
+        </dl>
+
+        <h5>Return Value</h5>
+        <p>
+            The logger with the given name, or the root logger if no name is given. If the logger didn't exist,
+            it will be created.
+        </p>
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <a name="Remarks"></a><h4>Remarks</h4>
+
+    <p>
+
+        In your server side logs, the root logger is called
+        <i>ClientRoot</i>.
+
+    </p>
+
+
+
+
+
+    <a name="Examples"></a><h4>Examples</h4>
+
+    <p>
+        This returns the logger with name &quot;a.b&quot;.
+    </p>
+
+<pre>var logger = JL('a.b');</pre>
+    <p>
+        This returns the root logger.
+    </p>
+
+<pre>var rootlogger = JL();</pre>
+
+
+
+
+
+
+
+
+<h3><a name="jlsetoptions"></a>setOptions Method</h3>
+<p>
+    Sets library wide options
+</p>
+
+
+
+
+    <a name="Definition"></a><h4>Definition</h4>
+
+
+
+<pre>setOptions(options: any): void</pre>
+
+    
+        <h5>Parameters</h5>
+
+        <dl>
+            <dt>options</dt>
+            <dd>A JSON object with options. See the Remarks sections below.</dd>
+        </dl>
+
+        <h5>Return Value</h5>
+        <p>
+            The
+            itself.
+        </p>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+    
+        <a name="Remarks"></a><h4>Remarks</h4>
+
+        <p>
+            The JSON object can have the following fields:
+        </p>
+
+        <table class="border">
+
+
+
+            <thead>
+                <tr>
+                    <th>Field</th>
+                    <th>Type</th>
+                    <th style="width: 100px">Default</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+
+
+            <tbody>
+                <tr>
+                    <td valign="top">enabled<br /><small>optional</small></td>
+                    <td valign="top">bool</td>
+                    <td valign="top">true</td>
+                    <td valign="top">If false, all loggers are disabled.</td>
+                </tr>
+
+                <tr>
+                    <td valign="top">maxMessages<br /><small>optional</small></td>
+                    <td valign="top">number</td>
+                    <td valign="top">no maximum</td>
+                    <td valign="top">Limits total number of messages sent to the server. See remarks below.</td>
+                </tr>
+
+
+                <tr>
+                    <td valign="top">requestId<br /><small>optional</small></td>
+                    <td valign="top">string</td>
+                    <td valign="top">(empty)</td>
+                    <td valign="top">
+                        Sent with all log messages to the server, so make it easier to identify all log messages for
+                        a given request. Reported via the <i>%requestId</i> placeholder of the
+                        <i>serverSideMessageFormat</i>
+                        attribute of the <a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#config-jsnlog">&lt;jsnlog&gt; Element</a>.
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+
+
+
+
+        <h5>maxMessages and buffering</h5>
+        <p>
+            You use maxMessages to limit the number of messages sent to the
+            server. When you set maxMessages via a call to setOptions,
+            a counter is set to maxMessages.
+
+            Each time messages are sent to the server, that counter is decremented
+            by the number of messages sent. When the counter gets to zero or below, no more messages will be sent.
+        </p>
+
+        <p>
+            However, this is affected by
+            <a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog#config-ajaxAppender">batching and buffering</a>.
+        </p>
+        <p>
+            Take a situation where maxMessages is set to 5 and 2 messages have already been sent - so the message counter
+            is now 3.
+            If 8 messages had been stored in a buffer and those messages are now sent, they will be all sent. That means the server will receive
+            a total of 2 + 8 = 10 messages. After this, no more messages will be sent, because the number of messages sent (10) exceeds maxMessages (5).
+        </p>
+        <p>
+            This means that maxMessages is not a precise limit on the number of messages sent to the server. On the other hand,
+            buffered messages are sent together in a single request to the server, minimizing bandwidth.
+            And buffered messages are often useful in solving exceptions, so there is value in receiving them.
+        </p>
+
+
+
+    
+
+
+    
+        <a name="Examples"></a><h4>Examples</h4>
+
+        <p>
+            This sets the requestId to be sent with all log messages to the server.
+        </p>
+
+<pre>JL.setOptions({
+    "requestId": "35F7416D-86F1-47FA-A9EC-547FFF510086"
+});</pre>
+
+    
+
+
+
+
+
+
+
+    <h2>Logger Object</h2>
+
+
+
+
+    <h3><a name="trace"></a>trace Method</h3>
+    <p>
+        Creates a log item with severity TRACE
+    </p>
+
+
+
+    
+        <a name="Definition"></a><h4>Definition</h4>
+
+
+<pre>trace<text>(logObject: any): Logger</text></pre>
+
+        
+            <h5>Parameters</h5>
+
+            <dl>
+                <dt>logObject</dt>
+                <dd>
+                    String or object to be logged, or a function that returns the string or object to be logged
+                    (<a href="#log">details</a>).
+                </dd>
+            </dl>
+
+            <h5>Return Value</h5>
+            <p>
+                The Logger itself.
+            </p>
+        
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+    
+        <a name="Examples"></a><h4>Examples</h4>
+
+
+        <p>
+            This creates a log message &quot;log message&quot; with severity
+            TRACE.
+        </p>
+
+<pre>JL().trace<text>("log message");</text></pre>
+
+
+
+        <h3><a name="debug"></a>debug Method</h3>
+        <p>
+            Creates a log item with severity DEBUG
+        </p>
+
+
+
+        
+            <a name="Definition"></a><h4>Definition</h4>
+
+
+<pre>debug<text>(logObject: any): Logger</text></pre>
+
+            
+                <h5>Parameters</h5>
+
+                <dl>
+                    <dt>logObject</dt>
+                    <dd>
+                        String or object to be logged, or a function that returns the string or object to be logged
+                        (<a href="#log">details</a>).
+                    </dd>
+                </dl>
+
+                <h5>Return Value</h5>
+                <p>
+                    The Logger itself.
+                </p>
+            
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            <a name="Examples"></a><h4>Examples</h4>
+
+
+            <p>
+                This creates a log message &quot;log message&quot; with severity
+                DEBUG.
+            </p>
+
+<pre>JL().debug<text>("log message");</text></pre>
+
+
+
+
+
+
+        
+
+
+
+        <h3><a name="info"></a>info Method</h3>
+        <p>
+            Creates a log item with severity INFO
+        </p>
+
+
+
+        
+            <a name="Definition"></a><h4>Definition</h4>
+
+
+<pre>info<text>(logObject: any): Logger</text></pre>
+
+            
+                <h5>Parameters</h5>
+
+                <dl>
+                    <dt>logObject</dt>
+                    <dd>
+                        String or object to be logged, or a function that returns the string or object to be logged
+                        (<a href="#log">details</a>).
+                    </dd>
+                </dl>
+
+                <h5>Return Value</h5>
+                <p>
+                    The Logger itself.
+                </p>
+            
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            <a name="Examples"></a><h4>Examples</h4>
+
+
+            <p>
+                This creates a log message &quot;log message&quot; with severity
+                INFO.
+            </p>
+
+<pre>JL().info<text>("log message");</text></pre>
+
+
+
+
+
+
+        
+
+
+
+
+        <h3><a name="warn"></a>warn Method</h3>
+        <p>
+            Creates a log item with severity WARN
+        </p>
+
+
+
+        
+            <a name="Definition"></a><h4>Definition</h4>
+
+
+<pre>warn<text>(logObject: any): Logger</text></pre>
+
+            
+                <h5>Parameters</h5>
+
+                <dl>
+                    <dt>logObject</dt>
+                    <dd>
+                        String or object to be logged, or a function that returns the string or object to be logged
+                        (<a href="#log">details</a>).
+                    </dd>
+                </dl>
+
+                <h5>Return Value</h5>
+                <p>
+                    The Logger itself.
+                </p>
+            
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            <a name="Examples"></a><h4>Examples</h4>
+
+
+            <p>
+                This creates a log message &quot;log message&quot; with severity
+                WARN.
+            </p>
+
+<pre>JL().warn<text>("log message");</text></pre>
+
+
+
+
+
+
+        
+
+
+
+
+        <h3><a name="error"></a>error Method</h3>
+        <p>
+            Creates a log item with severity ERROR
+        </p>
+
+
+
+        
+            <a name="Definition"></a><h4>Definition</h4>
+
+
+<pre>error<text>(logObject: any): Logger</text></pre>
+
+            
+                <h5>Parameters</h5>
+
+                <dl>
+                    <dt>logObject</dt>
+                    <dd>
+                        String or object to be logged, or a function that returns the string or object to be logged
+                        (<a href="#log">details</a>).
+                    </dd>
+                </dl>
+
+                <h5>Return Value</h5>
+                <p>
+                    The Logger itself.
+                </p>
+            
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            <a name="Examples"></a><h4>Examples</h4>
+
+
+            <p>
+                This creates a log message &quot;log message&quot; with severity
+                ERROR.
+            </p>
+
+<pre>JL().error<text>("log message");</text></pre>
+
+
+
+
+
+
+        
+
+
+
+
+        <h3><a name="fatal"></a>fatal Method</h3>
+        <p>
+            Creates a log item with severity FATAL
+        </p>
+
+
+
+        
+            <a name="Definition"></a><h4>Definition</h4>
+
+
+<pre>fatal<text>(logObject: any): Logger</text></pre>
+
+            
+                <h5>Parameters</h5>
+
+                <dl>
+                    <dt>logObject</dt>
+                    <dd>
+                        String or object to be logged, or a function that returns the string or object to be logged
+                        (<a href="#log">details</a>).
+                    </dd>
+                </dl>
+
+                <h5>Return Value</h5>
+                <p>
+                    The Logger itself.
+                </p>
+            
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            <a name="Examples"></a><h4>Examples</h4>
+
+
+            <p>
+                This creates a log message &quot;log message&quot; with severity
+                FATAL.
+            </p>
+
+<pre>JL().fatal<text>("log message");</text></pre>
+
+
+
+
+
+
+        
+
+
+
+
+
+        <h3><a name="fatalexception"></a>fatalException Method</h3>
+        <p>
+            Creates a log item with severity FATAL containing a message and an exception
+        </p>
+
+
+
+        
+            <a name="Definition"></a><h4>Definition</h4>
+
+<pre>fatalException(logObject: any, e: any): Logger</pre>
+
+            
+                <h5>Parameters</h5>
+
+                <dl>
+                    <dt>logObject</dt>
+                    <dd>
+                        String or object to be logged, or a function that returns the string or object to be logged
+                        (<a href="#log">details</a>).
+                    </dd>
+                    <dt>e</dt>
+                    <dd>
+                        <a href="http://www.w3schools.com/js/js_errors.asp" target="_blank">Exception</a>
+                        that will be logged along with the logObject. On Chrome, Firefox and IE10 and higher,
+                        a stack trace will be logged as well. However, see the Remarks below.
+                    </dd>
+                </dl>
+
+                <h5>Return Value</h5>
+                <p>
+                    The Logger itself.
+                </p>
+            
+
+        
+
+
+
+
+
+
+
+
+
+
+        
+            <a name="Remarks"></a><h4>Remarks</h4>
+
+            <p>
+                The fatalException function will log the stack trace of the exception, showing where in your code the exception occurred) under these circumstances:
+            </p>
+            <ul>
+                <li>
+                    The exception was thrown by the browser, such as when trying to read an undefined variable:
+                    <pre>try {
+    // Browser throws exception
+    i.dont.exist = 666;
+} catch(e) {
+    // Logs stack trace
+    JL().fatalException("Exception was thrown!", e);
+}</pre>
+                </li>
+                <li>
+                    You threw an
+                    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error" target="_blank">Error Object</a>
+                    or an <a href="#exceptionobject">Exception Object</a><text>:</text>
+                    <pre>try {
+    // Throwing Error object
+    throw new Error("Whoops!");
+} catch(e) {
+    // Logs stack trace
+    JL().fatalException("Exception was thrown!", e);
+}</pre>
+                </li>
+            </ul>
+            <p>
+                The fatalException function will <i>not</i> log the stack trace
+                if you throw something that is not an Error Object or Exception Object:
+            </p>
+<pre>try {
+    // Throwing something that is not an Error Object or 
+    // Exception Object (in this case a string)
+    throw "Whoops!";
+} catch(e) {
+    // Does not log stack trace
+    JL().fatalException("Exception was thrown!", e);
+}</pre>
+            <p>
+                The Exception Object is built into JSNLog.
+                It opens the door to much better exception handling.
+                The details are
+                <a href="#exceptionobject">here</a><text>.</text>
+
+            </p>
+
+        
+
+
+        
+            <a name="Examples"></a><h4>Examples</h4>
+
+            <p>
+                This code catches any exceptions and logs them.
+            </p>
+            <pre>try {
+    ...
+}
+catch (e) {
+    JL().fatalException("Exception was thrown!", e);
+}</pre>
+            <p>
+                This code catches any exceptions and logs them along with the values of some variables to make debugging easier.
+            </p>
+<pre>function f1(i, j) {
+    try {
+        ...
+    }
+    catch (e) {
+        JL('f1').fatalException({ "i": i, "j": j}, e);
+    }
+}</pre>
+
+        
+
+
+
+
+
+
+        <h3><a name="loggersetoptions"></a>setOptions Method</h3>
+        <p>
+            Sets options for a logger
+        </p>
+
+
+
+        
+            <a name="Definition"></a><h4>Definition</h4>
+
+
+
+<pre>setOptions(options: any): Logger</pre>
+
+            
+                <h5>Parameters</h5>
+
+                <dl>
+                    <dt>options</dt>
+                    <dd>A JSON object with options. See the Remarks sections below.</dd>
+                </dl>
+
+                <h5>Return Value</h5>
+                <p>
+                    The
+                    Logger itself.
+                </p>
+
+
+
+            
+
+
+
+
+
+
+
+
+
+
+            
+                <a name="Remarks"></a><h4>Remarks</h4>
+
+                <p>
+                    The JSON object can have the following fields:
+                </p>
+
+
+
+
+                <table class="border">
+
+
+
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Type</th>
+                            <th style="width: 100px">Default</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+
+
+                    <tbody>
+
+
+
+                        <tr>
+                            <td valign="top">level<br /><small>optional</small></td>
+                            <td valign="top">number</td>
+                            <td valign="top">(inherited from parent logger)</td>
+                            <td valign="top">Only log messages with a severity equal or higher than this can be sent to the server.</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">userAgentRegex<br /><small>optional</small></td>
+                            <td valign="top">regular expression</td>
+                            <td valign="top">(inherited from parent logger)</td>
+                            <td valign="top">
+                                If not empty, log messages only get processed if this regular expression matches the
+                                <a href="http://www.useragentstring.com/" target="_blank">user agent string</a>
+                                of the browser.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">ipRegex<br /><small>optional</small></td>
+                            <td valign="top">regular expression</td>
+                            <td valign="top">(inherited from parent logger)</td>
+                            <td valign="top">
+                                If not empty, log messages only get processed if this regular expression matches the IP address
+                                of the browser. If you use this, be sure to set the IP address via the <a href="#jlsetoptions">setOptions method of the JL object</a>.
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">disallow<br /><small>optional</small></td>
+                            <td valign="top">regular expression</td>
+                            <td valign="top">(inherited from parent logger)</td>
+                            <td valign="top">
+                                If not empty, log messages are suppressed if they match this regular expression. If an object is being logged,
+                                it is converted to a JSON string, which is then matched.
+                            </td>
+                        </tr>
+
+
+                        <tr>
+                            <td valign="top">appenders<br /><small>optional</small></td>
+                            <td valign="top">array of appenders</td>
+                            <td valign="top">(inherited from parent logger)</td>
+                            <td valign="top">One or more appenders for the logger to send its log messages to. See the examples.</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">onceOnly<br /><small>optional</small></td>
+                            <td valign="top">array of strings</td>
+                            <td valign="top">(inherited from parent logger)</td>
+                            <td valign="top">
+                                One or more regular expressions. When a message matches a regular expression, then
+                                any subsequent messages matching that same regular expression will be suppressed. See the remarks and examples.
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+
+
+
+                <a name="inheritance"></a>
+                <h5>Logger names and option inheritance</h5>
+                <p>
+                    Loggers not only get their options through the <i>setOptions</i> method,
+                    but also through inheritance. This is based on the name of each logger.
+                </p>
+                <p>
+                    Assume that you have a method &quot;method1&quot; in a namespace &quot;namespace1&quot;. Then it would
+                    make sense to use a naming scheme for you loggers like this: &quot;namespace1.method1.logger1&quot;,
+                    &quot;namespace1.method1.logger2&quot;, etc. This way, there are no name clashes and it makes keeping
+                    track of your loggers easy.
+                </p>
+                <p>
+                    Just as a namespace may contain methods, and a method may contain loggers, so you can think of these logger names
+                    as making up a hierarchy:
+                </p>
+                <ul>
+                    <li>
+                        The parent of &quot;namespace1.method1.logger1&quot; is &quot;namespace1.method1&quot;;
+                    </li>
+                    <li>
+                        The parent of &quot;namespace1.method1&quot; is &quot;namespace1&quot;;
+                    </li>
+                    <li>
+                        The parent of &quot;namespace1&quot; is the root logger (the logger without a name).
+                    </li>
+                </ul>
+                <p>
+                    You're not limited to just 3 levels, you can have as many as want.
+                </p>
+                <p>
+                    If you don't set an option using the <i>setOptions</i> method<text>,</text>
+                    the logger inherits that option from its parent. If you do not use <i>setOptions</i> method
+                    at all, every logger will have the same options as the root logger.
+                </p>
+
+
+                <h5>Root logger and default appender</h5>
+                <p>
+                    When the library loads, it creates the root logger. It also creates a default appender for use by the root logger.
+                </p>
+                <p>
+                    Because every logger inherits from the root logger (unless you override this with
+                    the <i>setOptions</i> method),
+                    you can start logging right away without having to create an appender.
+                </p>
+                <p>
+                    The root logger is created with these options:
+                </p>
+                <table class="border">
+                    <thead>
+                        <tr>
+                            <th>Option</th>
+                            <th>Default Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td valign="top">level</td>
+                            <td valign="top">DEBUG</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">userAgentRegex</td>
+                            <td valign="top">(empty)</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">ipRegex</td>
+                            <td valign="top">(empty)</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">disallow</td>
+                            <td valign="top">(empty)</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">appenders</td>
+                            <td valign="top">(default appender)</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+                <p>
+                    Note that because the default <i>level</i> for root logger is DEBUG,
+                    by default only log messages with severity DEBUG or higher get processed.
+                </p>
+                <p>
+                    You can change the options used with the root logger in the same way
+                    as any other logger, using the <i>setOptions</i> method. See the examples below.
+                </p>
+
+                <table class="border">
+                    <thead>
+                        <tr>
+                            <th>Option</th>
+                            <th>Default Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td valign="top">level</td>
+                            <td valign="top">TRACE</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">userAgentRegex</td>
+                            <td valign="top">(empty)</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">ipRegex</td>
+                            <td valign="top">(empty)</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">disallow</td>
+                            <td valign="top">(empty)</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">storeInBufferLevel</td>
+                            <td valign="top">ALL</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">sendWithBufferLevel</td>
+                            <td valign="top">OFF</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">bufferSize</td>
+                            <td valign="top">0</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">batchSize</td>
+                            <td valign="top">1</td>
+                        </tr>
+
+                        <tr>
+                            <td valign="top">url</td>
+                            <td valign="top">jsnlog.logger</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+
+
+                <h5>Suppressing duplicate messages with onceOnly</h5>
+                <p>
+                    You may have loggers inside code that gets called multiple times.
+                    As a result, you may get a series of messages that are essentially the same.
+                    Using <i>onceOnly</i>, you can suppress the duplicate messages, so only the first
+                    message is sent to the server.
+                </p>
+                <p>
+                    This works by setting one or more regular expressions. When a log message
+                    matches one of the regular expressions, the logger remembers that there has been a message that matched that regular expression.
+                    Then when another message arrives that matches that same regular expression, it is suppressed.
+                </p>
+
+                <p>
+                    For example, if you receive these messages:
+                </p>
+<pre>
+    Parameter x too high - x = 5
+    Parameter x too high - x = 6
+    Parameter x too high - x = 7
+    ...
+    Parameter x too high - x = 49
+    Parameter x too high - x = 50
+</pre>
+                <p>
+                    Then you can use the regular expression:
+                </p>
+<pre>
+    Parameter x too high - x = 
+</pre>
+                <p>
+                    To only receive the very first message:
+                </p>
+<pre>
+    Parameter x too high - x = 5
+</pre>
+                <p>
+                    See the examples for how to set the regular expression.
+                </p>
+                <p>
+                    You can set multiple regular expressions. These work independently. So if a message matches
+                    the first regular expression, then if a second message matches the second regular expression but not the first,
+                    then the second message gets through because it is not a duplicate of the first message.
+                </p>
+                <p>
+                    As shown
+                    <a href="#log">here</a>,
+                    you can log not only strings but also objects. If you log an object, the object is translated to a JSON string.
+                    That string is than matched against the regular expressions.
+                </p>
+
+
+                <p>
+                    Similar to other attributes, loggers inherit
+                    <i>onceOnly</i>
+                    from their parents. However, this is all or nothing. If you set
+                    <i>onceOnly</i> regular expressions
+                    for a logger, than any  <i>onceOnly</i> regular expressions that its parent may have had
+                    are disregarded.
+                </p>
+
+
+
+
+            
+
+
+            
+                <a name="Examples"></a><h4>Examples</h4>
+
+                <p>
+                    This sets the level of logger &quot;a.b&quot; to 3000.
+                </p>
+
+<pre>var logger = JL("a.b");
+logger.setOptions({
+    "level": 3000
+});</pre>
+
+                <p>
+                    This sets the level of the root logger.
+                </p>
+
+<pre>var rootlogger = JL();
+rootlogger.setOptions({
+    "level": 3000
+});</pre>
+
+                <p>
+                    This sets the level of logger &quot;a.b&quot; to INFO (which is the same as setting it to 3000).
+                    This code shows you don't need to use the variable <i>logger</i>.
+                </p>
+
+<pre>JL("a.b").setOptions({
+    "level": JL.getInfoLevel()
+});</pre>
+
+                <p>
+                    This sets the level of logger &quot;a.b&quot; to OFF, so it is completely switched off.
+                </p>
+
+<pre>JL("a.b").setOptions({
+    "level": JL.getOffLevel()
+});</pre>
+
+                <p>
+                    This sets the level to 4000.
+                    It also disables the logger for all browsers, except those whose user agent string contains <i>MSIE 7|MSIE 8</i>
+                    (that is, it is version 7 or 8 of Internet Explorer).
+                </p>
+
+<pre>var logger = JL("a.b");
+logger.setOptions({
+    "level": 4000,
+    "userAgentRegex": "MSIE 7|MSIE 8"
+});</pre>
+
+                <p>
+                    This creates an appender &quot;appender&quot; and then tells the logger &quot;a.b&quot; to send
+                    all log messages to it.
+                </p>
+
+<pre>var appender=JL.createAjaxAppender('appender');
+var logger = JL("a.b");
+logger.setOptions({
+    "appenders": [appender]
+});</pre>
+
+                <p>
+                    This creates an AjaxAppender and a ConsoleAppender and then tells the logger &quot;mylogger&quot; to send
+                    all log messages to them both.
+                </p>
+
+<pre>var ajaxAppender=JL.createAjaxAppender('ajaxAppender');
+var consoleAppender=JL.createConsoleAppender('consoleAppender');
+JL("mylogger").setOptions({"appenders": [ajaxAppender,consoleAppender]});
+</pre>
+
+                <p>
+                    Suppress duplicate messages that match the regular expression
+                    &quot;Parameter x too high - x =&quot;.
+                </p>
+
+<pre>JL("a").setOptions({
+    "onceOnly": [ "Parameter x too high - x =" ]
+});</pre>
+
+                <p>
+                    Suppress duplicate messages that match the regular expression
+                    &quot;Parameter x too high - x =&quot;. Also suppress duplicate messages that
+                    match &quot;x = \d+ and y = \d+&quot;.
+                </p>
+
+<pre>JL("a").setOptions({
+    "onceOnly": [ "Parameter x too high - x =", "x = \\d+ and y = \\d+" ]
+});</pre>
+
+                <p>
+                    Loggers inherit
+                    <i>onceOnly</i>
+                    from their parents.
+                    Assume you have a logger &quot;a.b&quot; whose parent &quot;a&quot; suppresses duplicates,
+                    but you want logger &quot;a.b&quot; to not suppress duplicates. To make that happen, give it
+                    a <i>onceOnly</i> collection without any regular expressions:
+                </p>
+
+<pre>JL("a.b").setOptions({
+    "onceOnly": [ ]
+});</pre>
+
+
+            
+
+
+
+
+            <h3><a name="log"></a>log Method</h3>
+            <p>
+                Creates a log item
+            </p>
+
+
+
+            
+                <a name="Definition"></a><h4>Definition</h4>
+
+<pre>log(level: number, logObject: any): Logger</pre>
+
+                
+                    <h3>Parameters</h3>
+
+                    <dl>
+                        <dt>level</dt>
+                        <dd>Severity of the message to be logged.</dd>
+                        <dt>logObject</dt>
+                        <dd>String or object to be logged, or a function that returns the string or object to be logged. See remarks.</dd>
+                    </dl>
+
+                    <h3>Return Value</h3>
+                    <p>
+                        The Logger itself.
+                    </p>
+                
+
+            
+
+
+
+
+
+
+
+
+
+
+            
+                <a name="Remarks"></a><h4>Remarks</h4>
+
+                <p>
+                    You are not restricted to simply logging strings.
+                    You can log objects, arrays, dates, numbers, booleans and even regular expressions. These
+                    are all converted to a string before being logged.
+                </p>
+                <p>
+                    If producing the log information is expensive, than you will only want to do this
+                    if the information will actually be logged - that is, the severity of the logged information
+                    exceeds the logger's level, etc.
+                </p>
+                <p>
+                    To solve this, you can pass in a function rather than the information itself. This function
+                    has to return the information. It will only be called if the log information will actually be logged.
+                </p>
+                <p>
+                    You can even have the function return another function that returns the actual information - or
+                    another function, etc. Do make sure there are no circular references in this chain, otherwise
+                    you will get a stack overflow.
+                </p>
+
+            
+
+
+            
+                <a name="Examples"></a><h4>Examples</h4>
+
+                <p>
+                    This creates a log message &quot;log message&quot; with severity 2500.
+                </p>
+
+<pre>JL().log(2500, "log message");</pre>
+
+                <p>
+                    This logs an object.
+                </p>
+
+<pre>var obj = {"f1": "v1", "f2": "v2"};
+JL().log(2500, obj);</pre>
+
+                <p>
+                    This passes in a function that produces the log information.
+                    The function is only called if the log information will actually be logged.
+                </p>
+
+<pre>JL().log(2500, function() { return "log message"; });</pre>
+
+
+            
+
+
+
+
+
+
+
+
+            <h2><a name="exceptionobject"></a>Exception Object</h2>
+            <p>
+                Allows you to create custom exceptions that hold a JSON object and an inner exception.
+            </p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+                <a name="Remarks"></a><h3>Remarks</h3>
+
+                <p>
+                    Similar to the
+                    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Error" target="_blank">standard Error object</a>,
+                    the Exception object allows you to throw a custom exception when things go wrong:
+                </p>
+<pre>function f(i, j) {
+    if (i &lt; 10) { 
+        throw new JL.Exception("i is too small!");
+    }
+    ...
+}</pre>
+
+                <h4>Add information to aid in debugging</h4>
+                <p>
+                    However, instead of a string, you can also pass in a JSON object with more information, to help you fix the issue:
+                </p>
+<pre>function f(i, j) {
+    if (i &lt; 10) { 
+        throw new JL.Exception({
+            "message": "i is too small!",
+            "i": i,
+            "j": j    
+        });
+    }
+    ...
+}</pre>
+                <h4>Add inner exceptions</h4>
+                <p>
+                    The Exception object supports inner exceptions - essentially storing one exception within another.
+                    To see how this works, consider this code:
+                </p>
+                <pre>function f2(v) {
+    var x, y;
+    ... some code
+    if (somethingWentWrong) {
+        throw new JL.Exception({ "x": x, "y": y, "v": v });
+    }
+}<br />
+function f1(anArray) {
+    var i;    
+    for(i = 0; i &lt; anArray.length; i++) {
+        f2(anArray[i]);
+    }
+}<br />
+try {
+    f1([1, 2, 3]);
+} catch(e) {
+    JL().fatalException("Exception was thrown!", e);
+}</pre>
+                <p>
+                    Function f2 can throw an exception. If it does, it puts all relevant information in the exception to make fixing the problem easier.
+                </p>
+                <p>
+                    However, function f1 also has information that might be relevant, such as the value of the index i. It would be good to somehow add that information
+                    to the exception.
+                </p>
+                <p>
+                    It would be possible to catch the exception in function f1 and then throw a new exception that contains all the information stored by function f2 plus the
+                    index i. But that would be complicated, and we'd lose the stack trace of the original exception.
+                </p>
+                <p>
+                    The easiest solution is to catch the exception in function f2, and then throw a new one that contains the original exception, plus any additional information.
+                    That way, we get to keep all the information stored in the original exception, including its stack trace.
+                    The changes are below in red:
+                </p>
+<pre>function f2(v) {
+    var x, y;
+    ... some code
+    if (somethingWentWrong) {
+        throw new JL.Exception({ "x": x, "y": y, "v": v });
+    }
+}<br />
+function f1(anArray) {
+    var i;    
+                <b>try {</b>
+        for(i = 0; i &lt; anArray.length; i++) {
+            f2(anArray[i]);
+        }
+                <b>} catch(e) {
+        // Throw new exception that contains the original one
+        throw new JL.Exception({ "i": i }, e);
+    }</b>
+}<br />
+try {
+    f1([1, 2, 3]);
+} catch(e) {
+    JL().fatalException("Exception was thrown!", e);
+}</pre>
+
+                <p>
+                    The fatalException function knows how to read the additional information and the inner exception from the Exception object, and will log it all.
+                </p>
+
+                <p>
+                    If you want to, there is nothing stopping you from having an inner exception that itself has an inner exception. You can go as deep as you want.
+                </p>
+
+
+
+
+<h2>Next part</h2>
+<p>
+    In this part 2 about JSNLog, you saw in detail all JavaScript functions provided by JSNLog.
+    The
+    <a href="http://www.codeproject.com/Articles/500416/Configuring-your-JavaScript-loggers-with-JSNLog">next part</a>,
+    will show all elements and attributes you can use in your web.config to configure your JavaScript loggers.
+</p>
+
+
+
+
+<p>If you like this article, please vote for it. </p>
+
+
+
+
+
+
+
+
+            
+
+
+

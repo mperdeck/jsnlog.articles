@@ -1,0 +1,311 @@
+<ul class="download">
+	<li><a href="http://nuget.org/packages/JSNLog">JSNLog Nuget package</a></li>
+	<li><a href="http://jsnlog.com/" target="_blank">JSNLog Detailed Documentation</a></li>
+</ul>
+
+<p>This article shows:</p>
+
+<ul>
+	<li><a href="#what">What client side logging is</a>, and <a href="#why">how it can help reduce client side production bugs</a> (skip if you&#39;re familiar with client side logging)</li>
+	<li><a href="#issues">Issues with traditional client side logging packages</a>;</li>
+	<li><a href="#jsnlog">JSNLog features that address these issues</a>.&nbsp;</li>
+</ul>
+
+<p>The main goal of this article is to provide an early preview of where the JSNLog project is going, and to get <a href="#feedback">your feedback</a>&nbsp; on whether this would be useful to you, and how it could be improved.</p>
+
+<h2><a name="what"></a>What is client side logging</h2>
+
+<p>Client side logging is very similar to server side logging with packages such as&nbsp; <a href="http://logging.apache.org/log4net/" target="_blank">Log4Net</a> or <a href="http://nlog-project.org/" target="_blank">NLog</a>.&nbsp;</p>
+
+<p>Using a client side logging package such as JSNLog, you create loggers in your JavaScript code and use them to write a log message when something interesting happens. You can set severity levels to manage what loggers are active, use appenders to store log messages, etc. For example:</p>
+
+<pre>
+jsnlog.getLogger(&quot;clientsidelogger&quot;).error(
+&nbsp; &nbsp; &quot;Something interesting happened&quot;);
+</pre>
+
+<p>One major difference is that client side log messages need to be sent over the Internet&nbsp; to your server for storage, creating more load on your server. One of the reasons to introduce JSNLog was to make it easier to manage this load.&nbsp;</p>
+
+<h2><a name="why"></a>Using client side logging to reduce production bugs</h2>
+
+<p>Having reliable bug free code on the client is just as important as having this on the server (ask your manager or client if in doubt). Unfortunately, client side programming throws up a few challenges here:</p>
+
+<ul>
+	<li>JavaScript is great for quick scripting, not so good for large scale maintainable software;</li>
+	<li>Browser compatibility issues.</li>
+</ul>
+
+<p>No matter how careful your programming or how thorough your pre-deployment testing, you can&#39;t guarantee there will be no bugs in your production code.&nbsp;</p>
+
+<p>One reliable way to reduce production bugs over time is to use logging:</p>
+
+<ol>
+	<li>Catch all exceptions and log them, so you at least know when things go wrong in your production code:
+	<pre>
+try {
+&nbsp; &nbsp; ...
+}
+catch(err) {
+&nbsp; &nbsp;jsnlog.getLogger(&quot;exceptionlogger&quot;).fatal(err.message);
+}
+</pre>
+	</li>
+	<li>Don&#39;t forget to set the global onerror handler, to catch uncaught exceptions:
+	<pre>
+window.onerror=function(msg, url, linenumber){
+&nbsp; &nbsp;jsnlog.getLogger(&quot;exceptionlogger&quot;).fatal(
+&nbsp; &nbsp; &nbsp; &#39;Message: &#39;+msg+&#39;\nURL: &#39;+url+&#39;\nLine: &#39;+linenumber)
+&nbsp; &nbsp;return true
+}
+</pre>
+	</li>
+	<li>Also include checks in your code for anomalous situations&nbsp; (<a href="http://www.nczonline.net/blog/2009/03/03/the-art-of-throwing-javascript-errors/" target="_blank">why</a>):
+	<pre>
+if (shouldBePositive &lt; 0) { throw &quot;shouldBePositive is negative!&quot;; }
+</pre>
+	</li>
+	<li>To make it easier to solve exceptions in your client side code, introduce additional loggers in your code to get additional information. Normally those loggers are disabled - you&#39;d only enable them when needed.
+	<pre>
+function DoSomething(a, b, c) {
+&nbsp; &nbsp; jsnlog.getLogger(&quot;DoSomething&quot;).trace(&quot;a=&quot; + a + &quot;,b=&quot; + b + &quot;,c=&quot; + c);
+&nbsp; &nbsp; ...
+}
+</pre>
+	</li>
+	<li>With all this in place, you have a good chance of finding production bugs and solving them, before they lead to embarrassing bug reports or angry managers.</li>
+</ol>
+
+<h2><a name="issues"></a>Issues with traditional client side logging packages</h2>
+
+<p>There are already many <a href="https://www.google.com.au/search?q=client+side+logging" target="_blank">client side logging packages</a>. However, they tend to suffer from these issues:</p>
+
+<ol>
+	<li><strong>Lack of server side integration</strong> -&nbsp; No out of the box support for receiving and storing log messages on the server. No ability to configure client side loggers in your web.config.&nbsp; No ability to see which client side and server side log messages relate to a given request.
+
+	<p>&nbsp;</p>
+	</li>
+	<li><strong>Few options to manage the flow of log messages over the Internet</strong> - Sending log messages over the Internet is relatively expensive. However, traditional packages offer few or no options to for example batch log messages or to have only a proportion of clients send log messages.
+	<p>&nbsp;</p>
+	</li>
+	<li><strong>Lack of client side specific options for enabling loggers</strong> - If a bug only affects IE7, you want to be able to enable a logger for only that browser.
+	<p>&nbsp;</p>
+	</li>
+	<li><strong>Lack of performance measuring</strong> - If an AJAX call takes too long to retrieve required data, you want to know about this.
+	<p>&nbsp;</p>
+	</li>
+</ol>
+
+<h2><a name="jsnlog"></a>JSNLog Features</h2>
+
+<p>The&nbsp; <a href="http://jsnlog.com/" target="_blank">JSNLog project</a> (JavaScript .Net Logging) &nbsp;came about to provide a package that is truly geared towards client side logging, &nbsp;and that integrates seamlessly with your server side logging for your ASP.NET or MVC site.</p>
+
+<p>JSNLog is already available, but not all planned functionality has been implemented yet. The implemented and planned features are below. This list will be updated as more features get implemented.</p>
+
+<p>Would these features be useful to you? Or is this headed in the wrong direction? <a href="#feedback">Say what you think</a>.</p>
+
+<p><a href="http://jsnlog.com/Documentation" target="_blank">Full JSNLog documentation</a></p>
+
+<h3>0. Core Functionality</h3>
+
+<table border="1" cellpadding="6" cellspacing="0">
+	<tbody>
+		<tr>
+			<th>Feature</th>
+			<th>Implemented</th>
+		</tr>
+		<tr>
+			<td valign="top">Loggers, appenders, severity levels, etc.
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">yes</td>
+		</tr>
+		<tr>
+			<td valign="top">Ability to log objects as well as strings
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">yes</td>
+		</tr>
+		<tr>
+			<td valign="top">Log an error message if a given condition doesn&#39;t hold
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">yes</td>
+		</tr>
+		<tr>
+			<td valign="top">When client side logging is disabled in web.config, use stub version of JSNLog with dummy log functions to reduce bandwidth
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">yes</td>
+		</tr>
+		<tr>
+			<td valign="top">Directly support logging of exceptions, including stack trace and line number, and possibly inner exceptions&nbsp;
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">not yet</td>
+		</tr>
+		<tr>
+			<td valign="top">Allow loggers to be identified not only by name or parent name (Log4Net style), but also by matching against a regular expression.&nbsp;
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">not yet</td>
+		</tr>
+	</tbody>
+</table>
+
+<h3>1. Integration with server side logging</h3>
+
+<table border="1" cellpadding="6" cellspacing="0">
+	<tbody>
+		<tr>
+			<th>Feature</th>
+			<th>Implemented</th>
+		</tr>
+		<tr>
+			<td valign="top">Receives log messages server side out of the box
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">yes</td>
+		</tr>
+		<tr>
+			<td valign="top">Stores log messages on your server using your server side package (NLog, Log4Net, etc.) using the Common.Logging interface.
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">yes</td>
+		</tr>
+		<tr>
+			<td valign="top">Configure loggers and appenders in web.config
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">yes</td>
+		</tr>
+		<tr>
+			<td valign="top">Support for storing a request specific GUID in client side and server side log messages, to identify all messages related to a specific request
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">not yet</td>
+		</tr>
+	</tbody>
+</table>
+
+<h3>2. Managing flow of messages over the Internet</h3>
+
+<table border="1" cellpadding="6" cellspacing="0">
+	<tbody>
+		<tr>
+			<th>Feature</th>
+			<th>Implemented</th>
+		</tr>
+		<tr>
+			<td valign="top">Batch log messages by batch size (for example, accumulate 2 messages, then send in single batch)
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">yes</td>
+		</tr>
+		<tr>
+			<td valign="top">Batch log messages by time period (for example, accumulate messages in a 1 second period, then send in single batch)
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">yes</td>
+		</tr>
+		<tr>
+			<td valign="top">Log no more than X messages in a given time interval and discard the rest
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">not yet</td>
+		</tr>
+		<tr>
+			<td valign="top">Suppress duplicate messages, based on a regular expression
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">not yet</td>
+		</tr>
+		<tr>
+			<td valign="top">Enable client side logging for only a proportion of all requests (for example, for only 10% of requests)
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">not yet</td>
+		</tr>
+		<tr>
+			<td valign="top">Suppress transient messages. For example, get a logger to only send messages if there are more than 2 in a 1 second period
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">not yet</td>
+		</tr>
+		<tr>
+			<td valign="top">Introduce an appender that stores the last N messages in browser memory instead of sending them to the server. Allow setting up a link to some logger, so if the logger sends a message, the messages stored in memory are sent as well.
+			<p>This allows you to for example capture the parameter values for all function calls in a given object, but only send all this information to the server when an exception happens. This way, you get plenty of info when something bad happens, without sending all this info when all is fine.</p>
+
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">not yet</td>
+		</tr>
+	</tbody>
+</table>
+
+<h3>3. Client side specific options</h3>
+
+<table border="1" cellpadding="6" cellspacing="0">
+	<tbody>
+		<tr>
+			<th>Feature</th>
+			<th>Implemented</th>
+		</tr>
+		<tr>
+			<td valign="top">Enable a logger only for specific browser type(s), by matching a regular expression against the user agent string.
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">yes</td>
+		</tr>
+		<tr>
+			<td valign="top">Enable a logger only for specific client IP address(es)
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">yes</td>
+		</tr>
+	</tbody>
+</table>
+
+<h3>4. Performance measuring</h3>
+
+<table border="1" cellpadding="6" cellspacing="0">
+	<tbody>
+		<tr>
+			<th>Feature</th>
+			<th>Implemented</th>
+		</tr>
+		<tr>
+			<td valign="top">Log the amount of time a particular section of code takes
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">yes</td>
+		</tr>
+		<tr>
+			<td valign="top">Log how long each stage of a request takes (from initial click to page fully loaded), using the <a href="http://www.w3.org/TR/2010/WD-navigation-timing-20101026/" target="_blank">W3C Navigation Timing standard</a>.
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">not yet</td>
+		</tr>
+		<tr>
+			<td valign="top">Create a log message if a section of code takes too long
+			<p>&nbsp;</p>
+			</td>
+			<td valign="top">not yet</td>
+		</tr>
+	</tbody>
+</table>
+
+<h2><a name="usage"></a>Usage</h2>
+
+<p>JSNLog will be used in the next generation online customer interface by a top 4 Australian bank.</p>
+
+<p>If your company uses JSNLog, please send your company&#39;s web site address to me at</p>
+
+<p><img src="feedback.png" title="This is an image to stop spammers" /></p>
+
+<p>Once there are 5 or more companies using JSNLog, their logos and links will start being added to the <a target="_blank">JSNLog.com</a> home page.</p>
+
+<h2><a name="feedback"></a>Your Feedback</h2>
+
+<p>Does all this make sense? Or is it a complete waste of time? How could this be improved? Leave your feedback in the comments section below this article.</p>
+
+<p>If you like this article, please vote for it.</p>

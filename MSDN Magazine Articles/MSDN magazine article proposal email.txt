@@ -1,0 +1,96 @@
+
+To:
+mmsubmit@microsoft.com
+
+re:
+MSDN Article Query
+
+------------------------------------------------------------------------------------
+
+TENTATIVE TITLE
+
+Unifying client side logging with server side logging
+
+
+BLURB
+
+Logging allows you to see what goes on inside a live application. In modern web sites, a request is handled by both server side code and JavaScript code on the client. This article explains how to integrate client side and server side logging, to gain a unified view of the life of your application.
+
+ 
+DESCRIPTION
+
+Live applications suffer from exceptions and unexpected user behaviour.  Logging is one way to gain insight into what goes on inside your application.
+
+Server side logging packages such as Log4Net, NLog and Elmah are long established. But most modern web applications are coded as much on the client as on the server. 
+
+Because a bug on the server can lead to an exception on the client, you need a unified view in a single log on what happens inside the entire application, whether client side or server side.
+
+This hands on article discusses how to create such a logging solution. It addresses these issues:
+
+* Logging on the client, shipping the log data to the server, and handing it to your server side logging package for storage.
+
+* Minimizing bandwidth and server load, by only shipping relevant log data. Techniques include suppressing near duplicates, and only logging for problem browsers such as IE8.
+
+* Grouping log entries that belong to the same request using request ids, and sorting them in the order in which they were generated using client side and server side timestamps.
+
+* Generating additional information for exceptions beyond a stack trace. Tracing method calls and key variables and storing this log data on the client, only sending it to the server when an exception actually happens.
+
+* Configuring client side loggers on the server.
+
+The article will show how to solve these issues with a number of libraries and technologies, including JSNLog,  Stacktrace.js, Common.Logging and TypeScript, the language used to implement JSNLog. 
+
+
+TAKEAWAYS
+
+You will be able to create an integrated logging infrastructure that allows you to get a unified view of what goes on inside your application on both the server and the client.
+
+
+SCOPE
+
+Logging
+
+
+PROGRAMMING LANGUAGES
+
+* C#
+* JavaScript / TypeScript
+
+
+TECHNOLOGIES DISCUSSED
+
+* Common.Logging
+* NLog / Log4Net / Elmah
+* JSNLog
+* Stacktrace.js
+
+
+BIO
+
+Matt Perdeck has over 8 years experience architecting and implementing .NET based high performance web sites, including Ticketek, the largest ticketing web site in Australia. 
+
+He is the author of the book "ASP.NET Performance Secrets", numerous articles, and 5 open source projects.
+He has worked in The Netherlands, Slovakia and Thailand. He is currently employed at Readify, a high profile software consultancy in Sydney, Australia.
+
+
+PUBLISHED ARTICLES
+
+Blog
+http://mattperdeck.com/
+
+Articles on codeproject.com
+http://www.codeproject.com/script/Articles/MemberArticles.aspx?amid=4332264
+
+Author of "ASP.NET Site Performance Secrets", published by Packt Publishing
+http://www.amazon.com/ASP-NET-Site-Performance-Secrets-Perdeck/dp/1849690685
+
+
+ALREADY PUBLISHED / GRANTED RIGHTS?
+
+No
+
+
+TARGET AUDIENCE
+
+Architects and developers creating complex web sites with significant client side code.
+
+

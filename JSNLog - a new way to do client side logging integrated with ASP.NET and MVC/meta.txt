@@ -1,0 +1,4 @@
+JSNLog - a new way to do client side logging integrated with ASP.NET and MVC
+
+Introduces JSNLog, an open source project to improve client side logging in ASP.NET and MVC based sites 
+
